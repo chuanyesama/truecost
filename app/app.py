@@ -39,7 +39,7 @@ def plot(fig: go.Figure) -> None:
     fig.update_yaxes(tickfont=dict(size=FONT - 1), title_font=dict(size=FONT))
     fig.update_traces(textfont=dict(size=FONT), selector=lambda tr: hasattr(tr, "textfont"))
     fig.update_traces(cliponaxis=False, selector=lambda tr: hasattr(tr, "cliponaxis"))
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
 
 
 def padded_range(values, pad: float = 0.18) -> list[float]:
@@ -210,7 +210,7 @@ with tab_overview:
         st.subheader(t("by_market"))
         st.caption(t("by_market_caption"))
         st.dataframe(by_ccy.style.format({by_ccy.columns[1]: "{:,.0f}", by_ccy.columns[2]: "{:+,.0f}"}),
-                     hide_index=True, use_container_width=True)
+                     hide_index=True, width="stretch")
 
 # ---------- real cost ----------
 with tab_cost:
@@ -235,7 +235,7 @@ with tab_cost:
         cols = show.columns
         num = {cols[1]: "{:,.4g}", cols[2]: "{:,.2f}", cols[3]: "{:,.2f}", cols[4]: "{:,.2f}",
                cols[6]: "{:+.1f}%", cols[8]: "{:,.2f}", cols[9]: "{:,.2f}", cols[10]: "{:+,.0f}"}
-        st.dataframe(show.style.format(num, na_rep="—"), hide_index=True, use_container_width=True)
+        st.dataframe(show.style.format(num, na_rep="—"), hide_index=True, width="stretch")
 
         for row in h.itertuples():
             if row.zero_cost:
@@ -293,7 +293,7 @@ with tab_cost:
             t("c_cur_diluted_base", base=B): txt(per["diluted_cost_base"], "{:,.2f}"),
         })
         st.dataframe(view,
-                     hide_index=True, use_container_width=True,
+                     hide_index=True, width="stretch",
                      height=38 * (min(len(view), 25) + 1) + 4)  # up to 25 rows, then scroll inside
 
 # ---------- round trips ----------
@@ -354,7 +354,7 @@ with tab_t:
         })
         st.dataframe(tv.sort_values(tv.columns[0], ascending=False).style.format(
             {tv.columns[3]: "{:,.4g}", tv.columns[4]: "{:,.4g}"}),
-            hide_index=True, use_container_width=True)
+            hide_index=True, width="stretch")
 
         tl = rounds.timeline(r.stock_trades, pick)
         fig = go.Figure()
@@ -423,12 +423,12 @@ with tab_fees:
         st.caption(t("by_size", base=B))
         bs = fc.by_size.copy()
         bs.columns = [t("c_size")] + names
-        st.dataframe(bs.style.format(fmt), hide_index=True, use_container_width=True)
+        st.dataframe(bs.style.format(fmt), hide_index=True, width="stretch")
     with v1:
         st.caption(t("by_mkt"))
         bm = fc.by_market.copy()
         bm.columns = [t("col_ccy")] + names
-        st.dataframe(bm.style.format(fmt), hide_index=True, use_container_width=True)
+        st.dataframe(bm.style.format(fmt), hide_index=True, width="stretch")
 
     fig = go.Figure(go.Bar(
         x=fc.by_month["month"], y=fc.by_month["commission"], marker=dict(color=POS, cornerradius=4),
@@ -444,7 +444,7 @@ with tab_fees:
     st.caption(t("top_symbols"))
     top = fc.by_symbol.head(10).copy()
     top.columns = [t("c_symbol")] + names
-    st.dataframe(top.style.format(fmt), hide_index=True, use_container_width=True)
+    st.dataframe(top.style.format(fmt), hide_index=True, width="stretch")
 
 
 # ---------- trading style ----------
@@ -519,7 +519,7 @@ with tab_fx:
             t("c_gain_base", base=B): d["gain_base"],
         })
         st.dataframe(dd.style.format({c: "{:+.1f}%" for c in dd.columns[2:4]} | {c: "{:+,.0f}" for c in dd.columns[4:]}),
-                     hide_index=True, use_container_width=True)
+                     hide_index=True, width="stretch")
 
     st.subheader(t("fx_split_title"))
     st.caption(t("fx_split_caption"))
@@ -539,7 +539,7 @@ with tab_fx:
         })
         st.dataframe(cv.style.format({cv.columns[1]: "{:,.2f}", cv.columns[2]: "{:,.0f}"}
                                      | {c: "{:+,.0f}" for c in cv.columns[3:]}),
-                     hide_index=True, use_container_width=True)
+                     hide_index=True, width="stretch")
     st.caption(t("fx_source_note", source=t("fx_" + r.fx_source)))
 
 # ---------- trades ----------
@@ -559,5 +559,5 @@ with tab_trades:
             tt = tt[tt[t("c_symbol")].isin(sym)]
         st.dataframe(tt.sort_values(t("c_time"), ascending=False).style.format(
             {t("c_qty"): "{:,.4g}", tt.columns[6]: "{:+,.2f}", tt.columns[7]: "{:+,.2f}"}),
-            hide_index=True, use_container_width=True, height=720)
+            hide_index=True, width="stretch", height=720)
         st.download_button(t("download"), tt.to_csv(index=False).encode("utf-8-sig"), "truecost_trades.csv")
