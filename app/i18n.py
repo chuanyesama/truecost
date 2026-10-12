@@ -8,6 +8,11 @@ SYMBOLS = {"AUD": "A$", "USD": "US$", "EUR": "€", "GBP": "£", "JPY": "¥", "C
 EN = {
     # app chrome
     "lang": "Language",
+    "theme_help": "Dark mode (saved in this browser; the page reloads)",
+    "sort_by": "Sort by",
+    "sort_loss": "Biggest loss first", "sort_gain": "Biggest gain first", "sort_recent": "Most recently traded",
+    "sort_oldest": "First opened", "sort_trades": "Most trades", "sort_symbol": "Symbol A–Z",
+    "c_last_trade": "Last trade",
     "tagline": "See what your Interactive Brokers account really earned — in your home currency.",
     "upload_header": "📄 Your statement",
     "upload_label": "IBKR Activity Statement (CSV)",
@@ -201,6 +206,11 @@ EN = {
 
 ZH = {
     "lang": "语言",
+    "theme_help": "深色模式（保存在本浏览器，切换后页面会刷新）",
+    "sort_by": "排序",
+    "sort_loss": "亏得最多的在前", "sort_gain": "赚得最多的在前", "sort_recent": "最近交易的在前",
+    "sort_oldest": "最早建仓的在前", "sort_trades": "交易笔数最多", "sort_symbol": "按代码 A–Z",
+    "c_last_trade": "最后交易",
     "tagline": "看清你的 IBKR 账户用本币算到底赚了多少。",
     "upload_header": "📄 导入对账单",
     "upload_label": "IBKR 活动对账单（CSV）",

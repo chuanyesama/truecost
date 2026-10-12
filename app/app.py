@@ -13,6 +13,7 @@ from pathlib import Path
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
+import streamlit.components.v1 as components
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
@@ -26,11 +27,14 @@ DEMO = ROOT / "data" / "sample" / "sample_statement.csv"     # synthetic, safe t
 # reference palette (dataviz skill): gain / loss poles, recessive ink
 POS, NEG = "#2a78d6", "#eb6834"
 INK2, GRID = "#52514e", "#e7e6e2"
-CLEAR = dict(plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)")
+CLEAR = dict(plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)", font=dict(size=15))
+TITLE = dict(size=17)
 
 METHODS = {"lot_ibkr": None, "lot_fifo": "FIFO", "lot_lifo": "LIFO", "lot_hifo": "HIFO"}
 
 st.set_page_config(page_title="TrueCost", page_icon="💱", layout="wide")
+# larger base text in both light and dark themes (Streamlit sizes everything in rem)
+st.markdown("<style>html { font-size: 18px; }</style>", unsafe_allow_html=True)
 
 
 def txt(series: pd.Series, fmt: str, na: str = "—") -> pd.Series:
@@ -73,10 +77,23 @@ def load_profile(data: bytes, method: str | None, source: str):
     return style.profile(load(data, method, source))
 
 
+def set_theme(name: str) -> None:
+    """Save the viewer's choice where Streamlit keeps it (this browser only) and reload."""
+    components.html(f"""<script>
+      const w = window.parent;
+      w.localStorage.setItem(`stActiveTheme-${{w.location.pathname}}-v1`, JSON.stringify({{name: "{name}"}}));
+      w.location.reload();
+    </script>""", height=0)
+
+
 # ---------- sidebar ----------
 with st.sidebar:
-    lang = st.radio("Language / 语言", ["English", "中文"], horizontal=True, label_visibility="collapsed")
+    top_l, top_r = st.columns([3, 2])
+    lang = top_l.radio("Language / 语言", ["English", "中文"], horizontal=True, label_visibility="collapsed")
     t = Translator(lang)
+    dark = (st.context.theme.type or "light") == "dark"
+    if top_r.toggle("🌙", value=dark, help=t("theme_help")) != dark:
+        set_theme("Light" if dark else "Dark")
     st.header(t("upload_header"))
     up = st.file_uploader(t("upload_label"), type="csv")
     with st.expander(t("how_to")):
@@ -216,11 +233,20 @@ with tab_cost:
         per = per.merge(hold_cols, on="symbol", how="left")
         per["status"] = per["holding"].map({True: t("status_open"), False: t("status_closed")})
         per.loc[per["diluted_cost"] <= 0, "status"] = t("status_zero")
-        per = per.sort_values("closed_base")
+        last = r.stock_trades.groupby("symbol")["time"].max()
+        per["last"] = per["symbol"].map(last)
+        per["first"] = per["symbol"].map(cyc.groupby("symbol")["start"].min())
+        sort_opts = {"sort_loss": ("closed_base", True), "sort_gain": ("closed_base", False),
+                     "sort_recent": ("last", False), "sort_oldest": ("first", True),
+                     "sort_trades": ("trades", False), "sort_symbol": ("symbol", True)}
+        how = st.selectbox(t("sort_by"), list(sort_opts), format_func=t)
+        col, asc = sort_opts[how]
+        per = per.sort_values(col, ascending=asc, na_position="last")
         view = pd.DataFrame({
             t("c_symbol"): per["symbol"], t("col_ccy"): per["currency"], t("c_status"): per["status"],
             t("c_cycles"): per["cycles"], t("c_trades"): per["trades"],
             t("c_closed_pl", base=B): txt(per["closed_base"].where(per["closed_base"] != 0), "{:+,.0f}"),
+            t("c_last_trade"): txt(per["last"], "{:%Y-%m-%d}"),
             t("c_cur_diluted"): txt(per["diluted_cost"], "{:,.2f}"),
             t("c_cur_diluted_base", base=B): txt(per["diluted_cost_base"], "{:,.2f}"),
         })
@@ -365,7 +391,7 @@ with tab_fees:
         text=[m_(v, False) for v in fc.by_month["commission"]], textposition="outside",
         customdata=fc.by_month["orders"],
         hovertemplate="%{x}<br>%{text} · %{customdata} " + t("orders_word") + "<extra></extra>"))
-    fig.update_layout(title=dict(text=t("monthly"), font=dict(size=14)), height=280,
+    fig.update_layout(title=dict(text=t("monthly"), font=TITLE), height=280,
                       margin=dict(t=40, b=10, l=10, r=10), yaxis=dict(title=B, gridcolor=GRID), **CLEAR)
     st.plotly_chart(fig, use_container_width=True)
 
@@ -423,8 +449,8 @@ with tab_style:
         textposition="outside", customdata=[t("hold_hover", share=f"{v:.0%}") for v in p.holding_mix["share"]],
         hovertemplate="%{y}: %{customdata}<extra></extra>",
     ))
-    fig.update_layout(title=dict(text=t("hold_title"), font=dict(size=14)), height=220,
-                      margin=dict(t=40, b=10, l=10, r=40), xaxis=dict(ticksuffix="%", gridcolor=GRID, range=[0, 100]),
+    fig.update_layout(title=dict(text=t("hold_title"), font=TITLE), height=270,
+                      margin=dict(t=50, b=10, l=10, r=40), xaxis=dict(ticksuffix="%", gridcolor=GRID, range=[0, 100]),
                       yaxis=dict(autorange="reversed"), **CLEAR)
     st.plotly_chart(fig, use_container_width=True)
 

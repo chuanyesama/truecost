@@ -5,3 +5,5 @@ __pycache__/
 .claude/
 # personal working notes with real account figures
 TASKS.md
+# local launcher (path depends on your Python install)
+Open TrueCost.bat

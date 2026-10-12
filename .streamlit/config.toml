@@ -1,0 +1,6 @@
+[theme]
+# light by default; viewers can switch to dark in the sidebar
+base = "light"
+
+[browser]
+gatherUsageStats = false
