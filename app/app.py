@@ -89,7 +89,12 @@ def set_theme(name: str) -> None:
 # ---------- sidebar ----------
 with st.sidebar:
     top_l, top_r = st.columns([3, 2])
-    lang = top_l.radio("Language / 语言", ["English", "中文"], horizontal=True, label_visibility="collapsed")
+    # language lives in the URL (?lang=zh) so it survives the reload a theme switch causes
+    langs = {"en": "English", "zh": "中文"}
+    current = langs.get(st.query_params.get("lang", "en"), "English")
+    lang = top_l.radio("Language / 语言", list(langs.values()), index=list(langs.values()).index(current),
+                       horizontal=True, label_visibility="collapsed")
+    st.query_params["lang"] = next(k for k, v in langs.items() if v == lang)
     t = Translator(lang)
     dark = (st.context.theme.type or "light") == "dark"
     if top_r.toggle("🌙", value=dark, help=t("theme_help")) != dark:
