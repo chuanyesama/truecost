@@ -28,13 +28,39 @@ DEMO = ROOT / "data" / "sample" / "sample_statement.csv"     # synthetic, safe t
 POS, NEG = "#2a78d6", "#eb6834"
 INK2, GRID = "#52514e", "#e7e6e2"
 CLEAR = dict(plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)", font=dict(size=15))
-TITLE = dict(size=17)
+TITLE = dict(size=18)
+FONT = 16
+
+
+def plot(fig: go.Figure) -> None:
+    """Readable text on every chart, in both themes."""
+    fig.update_layout(font=dict(size=FONT), legend=dict(font=dict(size=FONT)), hoverlabel=dict(font_size=FONT))
+    fig.update_xaxes(tickfont=dict(size=FONT - 1), title_font=dict(size=FONT))
+    fig.update_yaxes(tickfont=dict(size=FONT - 1), title_font=dict(size=FONT))
+    fig.update_traces(textfont=dict(size=FONT), selector=lambda tr: hasattr(tr, "textfont"))
+    fig.update_traces(cliponaxis=False, selector=lambda tr: hasattr(tr, "cliponaxis"))
+    st.plotly_chart(fig, use_container_width=True)
+
+
+def padded_range(values, pad: float = 0.18) -> list[float]:
+    """y-range with room for labels above/below the bars (waterfall: cumulative values)."""
+    lo, hi = min(0.0, *values), max(0.0, *values)
+    span = (hi - lo) or 1.0
+    return [lo - span * pad, hi + span * pad]
 
 METHODS = {"lot_ibkr": None, "lot_fifo": "FIFO", "lot_lifo": "LIFO", "lot_hifo": "HIFO"}
 
 st.set_page_config(page_title="TrueCost", page_icon="💱", layout="wide")
 # larger base text in both light and dark themes (Streamlit sizes everything in rem)
 st.markdown("<style>html { font-size: 18px; }</style>", unsafe_allow_html=True)
+if (st.context.theme.type or "light") == "light":
+    # Streamlit's light warning box is pale yellow text on pale yellow; darken it
+    st.markdown("""<style>
+      [data-testid="stAlertContentWarning"] { color: #4a3600; }
+      [data-testid="stAlertContentWarning"] strong { color: #3a2a00; }
+      [data-testid="stAlertContainer"]:has([data-testid="stAlertContentWarning"]) {
+        background: #fff4d6; border: 1px solid #e3b33d; }
+    </style>""", unsafe_allow_html=True)
 
 
 def txt(series: pd.Series, fmt: str, na: str = "—") -> pd.Series:
@@ -81,6 +107,11 @@ def set_theme(name: str) -> None:
     """Save the viewer's choice where Streamlit keeps it (this browser only) and reload."""
     components.html(f"""<script>
       const w = window.parent;
+      const tabs = [...w.document.querySelectorAll('button[role="tab"]')];
+      const open = tabs.findIndex(b => b.getAttribute("aria-selected") === "true");
+      const url = new URL(w.location.href);
+      if (open >= 0) url.searchParams.set("tab", open);
+      w.history.replaceState(null, "", url);
       w.localStorage.setItem(`stActiveTheme-${{w.location.pathname}}-v1`, JSON.stringify({{name: "{name}"}}));
       w.location.reload();
     </script>""", height=0)
@@ -141,7 +172,12 @@ if r.reconciles:
 else:
     st.error(md(t("not_reconciled", diff=m_(r.total_pl - (r.nav_end - r.net_deposits)))))
 
-tab_overview, tab_cost, tab_t, tab_fees, tab_style, tab_fx, tab_trades = st.tabs(t("tabs"))
+tab_names = t("tabs")
+try:  # the theme switch reloads the page; reopen the tab the viewer was on
+    open_tab = tab_names[int(st.query_params.get("tab", 0))]
+except (ValueError, IndexError):
+    open_tab = tab_names[0]
+tab_overview, tab_cost, tab_t, tab_fees, tab_style, tab_fx, tab_trades = st.tabs(tab_names, default=open_tab)
 
 # ---------- overview ----------
 with tab_overview:
@@ -163,9 +199,10 @@ with tab_overview:
         totals={"marker": {"color": INK2}}, connector={"line": {"color": GRID, "width": 1}},
         hovertemplate="%{x}<br>%{text}<extra></extra>",
     ))
-    fig.update_layout(height=360, margin=dict(t=30, b=10, l=10, r=10), showlegend=False,
-                      yaxis=dict(title=B, gridcolor=GRID, zerolinecolor=INK2), **CLEAR)
-    st.plotly_chart(fig, use_container_width=True)
+    steps = [sum(p[1] for p in parts[: i + 1]) for i in range(len(parts))] + [r.total_pl]
+    fig.update_layout(height=460, margin=dict(t=40, b=10, l=10, r=10), showlegend=False,
+                      yaxis=dict(title=B, gridcolor=GRID, zerolinecolor=INK2, range=padded_range(steps)), **CLEAR)
+    plot(fig)
 
     if not r.sells.empty:
         by_ccy = r.sells.groupby("currency", as_index=False)[["realized", "realized_base"]].sum()
@@ -217,13 +254,13 @@ with tab_cost:
                                       ("price", t("s_price"), NEG, "diamond")]:
             fig.add_trace(go.Scatter(
                 x=h[col] / h["price"] * 100 - 100, y=h["symbol"], mode="markers", name=name,
-                marker=dict(size=12, color=color, symbol=sym, line=dict(width=2, color=color)),
+                marker=dict(size=16, color=color, symbol=sym, line=dict(width=2, color=color)),
                 customdata=h[col], hovertemplate="%{y} " + name + ": %{customdata:,.2f}<extra></extra>",
             ))
-        fig.update_layout(height=60 + 50 * len(h), margin=dict(t=10, b=10, l=10, r=10),
+        fig.update_layout(height=140 + 70 * len(h), margin=dict(t=20, b=10, l=10, r=10),
                           xaxis=dict(title=t("rel_price"), ticksuffix="%", gridcolor=GRID, zerolinecolor=INK2),
                           legend=dict(orientation="h", y=1.15), **CLEAR)
-        st.plotly_chart(fig, use_container_width=True)
+        plot(fig)
 
     st.subheader(t("all_stocks"))
     st.caption(t("all_stocks_caption"))
@@ -256,7 +293,7 @@ with tab_cost:
             t("c_cur_diluted_base", base=B): txt(per["diluted_cost_base"], "{:,.2f}"),
         })
         st.dataframe(view,
-                     hide_index=True, use_container_width=True, height=420)
+                     hide_index=True, use_container_width=True, height=38 * (len(view) + 1) + 4)
 
 # ---------- round trips ----------
 with tab_t:
@@ -298,10 +335,10 @@ with tab_t:
                 customdata=[t("rounds_hover", n=n, win=f"{w:.0%}") for n, w in zip(per["n"], per["win"])],
                 hovertemplate="%{y}<br>%{text} · %{customdata}<extra></extra>",
             ))
-            fig.update_layout(height=max(260, 26 * len(per)), margin=dict(t=10, b=10, l=10, r=70),
+            fig.update_layout(height=max(320, 36 * len(per)), margin=dict(t=10, b=10, l=10, r=90),
                               xaxis=dict(title=t("rounds_axis", base=B), gridcolor=GRID, zerolinecolor=INK2),
                               yaxis=dict(autorange="reversed"), **CLEAR)
-            st.plotly_chart(fig, use_container_width=True)
+            plot(fig)
 
         st.subheader(t("one_stock"))
         symbols = per["symbol"].tolist() or sorted(rd["symbol"].unique())
@@ -328,17 +365,17 @@ with tab_t:
             x = tl[tl["side"] == side]
             fig.add_trace(go.Scatter(
                 x=x["time"], y=x["price"], name=t(side), mode="markers",
-                marker=dict(color=color, size=9, symbol=sym), customdata=x[["qty", "shares"]],
+                marker=dict(color=color, size=12, symbol=sym), customdata=x[["qty", "shares"]],
                 hovertemplate=t(side) + " %{customdata[0]:,.4g} @ %{y:,.2f}<br>" + t("after_pos")
                 + " %{customdata[1]:,.4g}<extra></extra>"))
         lo, hi = tl["price"].min(), tl["price"].max()
         pad = (hi - lo) * 0.15 or hi * 0.05
-        fig.update_layout(height=380, margin=dict(t=30, b=10, l=10, r=10), hovermode="closest",
+        fig.update_layout(height=540, margin=dict(t=40, b=10, l=10, r=10), hovermode="closest",
                           yaxis=dict(title=t("price_axis", ccy=one["currency"].iloc[0]), gridcolor=GRID,
                                      range=[lo - pad, hi + pad]),
                           legend=dict(orientation="h", y=1.12), **CLEAR)
         st.caption(t("timeline_caption"))
-        st.plotly_chart(fig, use_container_width=True)
+        plot(fig)
 
 # ---------- fees ----------
 with tab_fees:
@@ -361,8 +398,9 @@ with tab_fees:
             increasing={"marker": {"color": POS}}, decreasing={"marker": {"color": NEG}},
             totals={"marker": {"color": INK2}}, connector={"line": {"color": GRID, "width": 1}},
             hovertemplate="%{x}<br>%{text}<extra></extra>"))
-        fig.update_layout(height=300, margin=dict(t=30, b=10, l=10, r=10), yaxis=dict(title=B, gridcolor=GRID), **CLEAR)
-        st.plotly_chart(fig, use_container_width=True)
+        fig.update_layout(height=420, margin=dict(t=40, b=10, l=10, r=10),
+                          yaxis=dict(title=B, gridcolor=GRID, range=padded_range([gross, trading])), **CLEAR)
+        plot(fig)
 
     if fc.usd_min_share > 0.3:
         st.warning(md(t("min_msg", share=fc.usd_min_share, ps=fc.usd_per_share, x=fc.usd_per_share / 0.005)))
@@ -396,9 +434,11 @@ with tab_fees:
         text=[m_(v, False) for v in fc.by_month["commission"]], textposition="outside",
         customdata=fc.by_month["orders"],
         hovertemplate="%{x}<br>%{text} · %{customdata} " + t("orders_word") + "<extra></extra>"))
-    fig.update_layout(title=dict(text=t("monthly"), font=TITLE), height=280,
-                      margin=dict(t=40, b=10, l=10, r=10), yaxis=dict(title=B, gridcolor=GRID), **CLEAR)
-    st.plotly_chart(fig, use_container_width=True)
+    fig.update_layout(title=dict(text=t("monthly"), font=TITLE), height=380,
+                      margin=dict(t=50, b=10, l=10, r=10),
+                      yaxis=dict(title=B, gridcolor=GRID, range=padded_range(fc.by_month["commission"].tolist(), 0.15)),
+                      **CLEAR)
+    plot(fig)
 
     st.caption(t("top_symbols"))
     top = fc.by_symbol.head(10).copy()
@@ -454,10 +494,10 @@ with tab_style:
         textposition="outside", customdata=[t("hold_hover", share=f"{v:.0%}") for v in p.holding_mix["share"]],
         hovertemplate="%{y}: %{customdata}<extra></extra>",
     ))
-    fig.update_layout(title=dict(text=t("hold_title"), font=TITLE), height=270,
+    fig.update_layout(title=dict(text=t("hold_title"), font=TITLE), height=320,
                       margin=dict(t=50, b=10, l=10, r=40), xaxis=dict(ticksuffix="%", gridcolor=GRID, range=[0, 100]),
                       yaxis=dict(autorange="reversed"), **CLEAR)
-    st.plotly_chart(fig, use_container_width=True)
+    plot(fig)
 
     st.subheader(t("insights"))
     order = {"warn": 0, "info": 1, "good": 2}
@@ -518,5 +558,5 @@ with tab_trades:
             tt = tt[tt[t("c_symbol")].isin(sym)]
         st.dataframe(tt.sort_values(t("c_time"), ascending=False).style.format(
             {t("c_qty"): "{:,.4g}", tt.columns[6]: "{:+,.2f}", tt.columns[7]: "{:+,.2f}"}),
-            hide_index=True, use_container_width=True, height=480)
+            hide_index=True, use_container_width=True, height=720)
         st.download_button(t("download"), tt.to_csv(index=False).encode("utf-8-sig"), "truecost_trades.csv")
