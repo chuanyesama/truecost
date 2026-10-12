@@ -293,7 +293,8 @@ with tab_cost:
             t("c_cur_diluted_base", base=B): txt(per["diluted_cost_base"], "{:,.2f}"),
         })
         st.dataframe(view,
-                     hide_index=True, use_container_width=True, height=38 * (len(view) + 1) + 4)
+                     hide_index=True, use_container_width=True,
+                     height=38 * (min(len(view), 25) + 1) + 4)  # up to 25 rows, then scroll inside
 
 # ---------- round trips ----------
 with tab_t:
