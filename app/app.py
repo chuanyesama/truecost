@@ -18,6 +18,7 @@ import streamlit.components.v1 as components
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "app"))
+import analytics  # noqa: E402
 from i18n import Translator, money  # noqa: E402
 from src import costs, report, rounds, style  # noqa: E402
 
@@ -145,16 +146,63 @@ elif LOCAL_FILES:
 else:
     raw, demo = DEMO.read_bytes(), True
 
-with st.spinner(t("parsing")):
-    probe = load(raw, None, "ecb")
+analytics.track_once("app_open", lang=lang, demo=demo)
+
+try:
+    with st.spinner(t("parsing")):
+        probe = load(raw, None, "ecb")
+except Exception as e:  # not an IBKR Activity Statement, or a format we don't handle yet
+    analytics.track_once("statement_error", error=type(e).__name__)
+    st.title("TrueCost")
+    st.error(t("parse_error"))
+    st.stop()
+
 with st.sidebar:
     sources = ["rba", "ecb"] if probe.base == "AUD" else ["ecb"]
     source = st.selectbox(t("fx_source"), sources, format_func=lambda s: t("fx_" + s))
-    st.caption(t("disclaimer"))
 
 with st.spinner(t("parsing")):
     r = load(raw, METHODS[method_key], source)
 B = r.base
+if up is not None:
+    analytics.track_once("statement_uploaded", base=B, markets=int(r.stock_trades["currency"].nunique()),
+                         trades=analytics.trades_bucket(len(r.stock_trades)), reconciles=bool(r.reconciles))
+
+# ---------- paid report (demand test), feedback, privacy ----------
+REPORT_PRICE = {"AUD": 19, "USD": 12, "EUR": 11, "GBP": 10, "NZD": 21, "CAD": 17, "SGD": 16, "HKD": 95}
+
+
+def report_offer(where: str) -> None:
+    price = money(REPORT_PRICE.get(B, 12), B if B in REPORT_PRICE else "USD", sign=False)
+    st.markdown(f"##### 📄 {t('offer_title')}")
+    st.caption(t("offer_body"))
+    if st.button(t("offer_button", price=price), key=f"offer_{where}", type="primary"):
+        st.session_state.offer_open = True
+        analytics.track("paid_report_click", where=where, base=B, demo=demo, price=price)
+    if st.session_state.get("offer_open"):
+        st.info(t("offer_soon"))
+        with st.form(f"waitlist_{where}", clear_on_submit=True):
+            email = st.text_input(t("offer_email"), placeholder="you@example.com")
+            if st.form_submit_button(t("offer_notify")):
+                if "@" in email and "." in email.split("@")[-1]:
+                    analytics.track("waitlist_signup", where=where, base=B, email=email.strip())
+                    st.success(t("offer_thanks"))
+                else:
+                    st.warning(t("offer_bad_email"))
+
+
+with st.sidebar:
+    st.divider()
+    report_offer("sidebar")
+    with st.expander(t("feedback_title")):
+        with st.form("feedback", clear_on_submit=True):
+            text = st.text_area(t("feedback_label"), max_chars=1000)
+            if st.form_submit_button(t("feedback_send")) and text.strip():
+                analytics.track("feedback", text=text.strip(), lang=lang)
+                st.success(t("feedback_thanks"))
+    with st.expander(t("privacy_title")):
+        st.markdown(t("privacy_body"))
+    st.caption(t("disclaimer"))
 m_ = lambda x, sign=True, d=0: money(x, B, sign, d)  # noqa: E731
 a = r.attribution
 trading = a["stock_price"]

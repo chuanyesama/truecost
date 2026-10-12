@@ -7,3 +7,5 @@ __pycache__/
 TASKS.md
 # local launcher (path depends on your Python install)
 Open TrueCost.bat
+# API keys for local runs
+.streamlit/secrets.toml

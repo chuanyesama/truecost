@@ -8,6 +8,27 @@ SYMBOLS = {"AUD": "A$", "USD": "US$", "EUR": "€", "GBP": "£", "JPY": "¥", "C
 EN = {
     # app chrome
     "lang": "Language",
+    "parse_error": "This file doesn't look like an IBKR **Activity Statement** CSV. In the IBKR Portal choose "
+                   "Performance & Reports → Statements → **Activity**, format **CSV**, language **English**, and try again.",
+    "offer_title": "Annual report (PDF)",
+    "offer_body": "Your year in one PDF: P/L in your home currency split into trading vs currency, every closed "
+                  "trade with cost and proceeds at each day's rate, fees and round-trip results — ready to keep or "
+                  "hand to your accountant.",
+    "offer_button": "Get the report — {price}",
+    "offer_soon": "Coming soon! Leave your email and we'll tell you when it's ready (and give you an early-bird price).",
+    "offer_email": "Email (optional)", "offer_notify": "Notify me",
+    "offer_thanks": "Thanks — you're on the list.", "offer_bad_email": "That email doesn't look right.",
+    "feedback_title": "💬 Feedback", "feedback_label": "What's missing, wrong or confusing?",
+    "feedback_send": "Send", "feedback_thanks": "Thank you!",
+    "privacy_title": "🔒 Privacy",
+    "privacy_body": "- Your statement is processed for your session only; the temporary file is deleted right after "
+                    "parsing and results expire within an hour.\n"
+                    "- We count anonymous usage events to improve TrueCost: page opened, language, whether a "
+                    "statement was uploaded, base currency, number of markets, a rough trade-count range, and which "
+                    "buttons were clicked. **No amounts, symbols, account numbers or statement contents.**\n"
+                    "- A random id identifies one visit only; we don't track you across visits.\n"
+                    "- Your email and feedback are stored only if you type them in, and used only to reply or notify you.\n"
+                    "- Analytics provider: PostHog (EU servers).",
     "theme_help": "Dark mode (saved in this browser; the page reloads)",
     "sort_by": "Sort by",
     "sort_loss": "Biggest loss first", "sort_gain": "Biggest gain first", "sort_recent": "Most recently traded",
@@ -206,6 +227,24 @@ EN = {
 
 ZH = {
     "lang": "语言",
+    "parse_error": "这个文件看起来不是 IBKR 的**活动对账单（Activity Statement）** CSV。请在 IBKR 网页版选择"
+                   "业绩与报告 → 报表 → **活动**，格式选 **CSV**，语言选 **English**，再试一次。",
+    "offer_title": "年度报告（PDF）",
+    "offer_body": "把你一整年浓缩成一份 PDF：按本币计算的盈亏（交易 vs 汇率）、每笔平仓按当日汇率折算的成本和收入、"
+                  "费用和做 T 成绩——方便自己留存，也可以直接交给会计师。",
+    "offer_button": "获取报告 — {price}",
+    "offer_soon": "即将推出！留下邮箱，上线时第一时间通知你（并享受早鸟价）。",
+    "offer_email": "邮箱（选填）", "offer_notify": "通知我",
+    "offer_thanks": "谢谢，已登记！", "offer_bad_email": "邮箱格式好像不对。",
+    "feedback_title": "💬 反馈", "feedback_label": "哪里缺了、错了或者看不懂？",
+    "feedback_send": "发送", "feedback_thanks": "谢谢！",
+    "privacy_title": "🔒 隐私",
+    "privacy_body": "- 你的对账单只在本次会话中处理，解析完立即删除临时文件，分析结果一小时内过期。\n"
+                    "- 为了改进 TrueCost，我们统计匿名使用情况：打开页面、语言、是否上传了对账单、本币、"
+                    "市场数量、交易笔数的大致区间、点击了哪些按钮。**不记录任何金额、股票代码、账户号码或对账单内容。**\n"
+                    "- 每次访问使用一个随机编号，不会跨访问追踪你。\n"
+                    "- 只有你主动填写时才会保存邮箱和反馈，仅用于回复或通知你。\n"
+                    "- 统计服务商：PostHog（欧洲服务器）。",
     "theme_help": "深色模式（保存在本浏览器，切换后页面会刷新）",
     "sort_by": "排序",
     "sort_loss": "亏得最多的在前", "sort_gain": "赚得最多的在前", "sort_recent": "最近交易的在前",

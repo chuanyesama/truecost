@@ -60,6 +60,8 @@ IBKR Portal → **Performance & Reports → Statements → Activity** → period
 
 Uploaded statements are parsed in memory for your session; the temporary file is deleted as soon as parsing finishes, and cached results expire after an hour.
 
+Anonymous usage events help decide what to build next: page opened, language, whether a statement was uploaded, base currency, number of markets, a rough trade-count range, and which buttons were clicked. No amounts, symbols, account numbers or statement contents are ever sent; a random id covers a single visit. Emails and feedback are stored only if a viewer types them in. Events go to PostHog (EU) and are off unless `POSTHOG_KEY` is set (see `app/analytics.py`).
+
 ## Disclaimer
 
 For information and self-review only. Not tax, financial or investment advice. Savings estimates for pricing plans are approximate — check IBKR's current rates.
