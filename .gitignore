@@ -1,0 +1,7 @@
+data/raw/
+__pycache__/
+.venv/
+.pytest_cache/
+.claude/
+# personal working notes with real account figures
+TASKS.md
