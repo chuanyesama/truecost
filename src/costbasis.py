@@ -175,3 +175,21 @@ def open_lots(positions: dict[str, Position]) -> pd.DataFrame:
          "unit_cost": l.unit_cost, "unit_cost_base": l.unit_cost_base}
         for p in positions.values() for l in p.lots
     ])
+
+
+def infer_lot_method(trades: pd.DataFrame, candidates=("FIFO", "LIFO", "HIFO")) -> str | None:
+    """Lot-matching method that best reproduces IBKR's own realized P/L.
+
+    Used when the statement doesn't carry the election code on each trade
+    (e.g. some Flex queries). Returns None if there is nothing to compare."""
+    if "ibkr_realized" not in trades or not (trades["ibkr_realized"] != 0).any():
+        return None
+    best, best_hits = None, -1
+    for m in candidates:
+        _, s = run(trades, method=m)
+        if s.empty:
+            continue
+        hits = int(((s["realized"] - s["ibkr_realized"]).abs() < 0.05).sum())
+        if hits > best_hits:
+            best, best_hits = m, hits
+    return best

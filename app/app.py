@@ -7,6 +7,7 @@ from __future__ import annotations
 import os
 import sys
 import tempfile
+import time
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -21,9 +22,29 @@ sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "app"))
 import analytics  # noqa: E402
 from i18n import Translator, money  # noqa: E402
-from src import costs, prices, report, rounds, style  # noqa: E402
+from src import costs, flex, prices, report, rounds, style  # noqa: E402
 
-LOCAL_FILES = [] if os.environ.get("TRUECOST_DEMO") else sorted((ROOT / "data" / "raw").glob("*.csv"))  # never committed
+RAW = ROOT / "data" / "raw"  # your own statements, never committed
+FLEX_CACHE = RAW / "ibkr_flex_sync.csv"
+SYNC_EVERY = 6 * 3600  # seconds; auto-refresh the synced statement when older than this
+
+
+def local_files() -> list[Path]:
+    """Newest first, so a fresh sync wins over an older manual download."""
+    if os.environ.get("TRUECOST_DEMO"):
+        return []
+    return sorted(RAW.glob("*.csv"), key=lambda p: p.stat().st_mtime, reverse=True)
+
+
+def flex_credentials() -> tuple[str | None, str | None]:
+    """Auto-sync is a paid feature; for now it runs only where a token is configured locally."""
+    try:
+        token, query = st.secrets.get("IBKR_FLEX_TOKEN"), st.secrets.get("IBKR_FLEX_QUERY_ID")
+    except Exception:  # no secrets file
+        token = query = None
+    token = token or os.environ.get("IBKR_FLEX_TOKEN")
+    query = query or os.environ.get("IBKR_FLEX_QUERY_ID")
+    return (str(token), str(query)) if token and query else (None, None)
 DEMO = ROOT / "data" / "sample" / "sample_statement.csv"     # synthetic, safe to publish
 
 # reference palette (dataviz skill): gain / loss poles, recessive ink
@@ -138,6 +159,32 @@ with st.sidebar:
         st.markdown(t("how_to_steps"))
     method_key = st.selectbox(t("lot_method"), list(METHODS), format_func=t, help=t("lot_method_help"))
 
+def sync_now(token: str, query: str) -> None:
+    box = st.sidebar.empty()
+    box.info(t("sync_running"))
+    try:
+        xml = flex.fetch(token, query, on_wait=lambda n: box.info(t("sync_waiting", n=n)))
+        flex.save_statement(xml, FLEX_CACHE)
+        box.success(t("sync_done"))
+    except flex.FlexError as e:
+        box.error(t("sync_failed", err=str(e)))
+    except Exception as e:  # network etc.
+        box.error(t("sync_failed", err=type(e).__name__))
+
+
+token, query = flex_credentials()
+if token and up is None and not os.environ.get("TRUECOST_DEMO"):
+    with st.sidebar:
+        st.markdown("##### " + t("sync_title"))
+        fresh = FLEX_CACHE.exists() and time.time() - FLEX_CACHE.stat().st_mtime < SYNC_EVERY
+        if st.button(t("sync_button"), width="stretch") or (not fresh and not st.session_state.get("auto_synced")):
+            st.session_state.auto_synced = True  # at most one automatic sync per visit
+            sync_now(token, query)
+        if FLEX_CACHE.exists():
+            age = pd.Timestamp.fromtimestamp(FLEX_CACHE.stat().st_mtime)
+            st.caption(t("sync_last", when=f"{age:%Y-%m-%d %H:%M}"))
+
+LOCAL_FILES = local_files()
 demo = False
 if up is not None:
     raw = up.getvalue()

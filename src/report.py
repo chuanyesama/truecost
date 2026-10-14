@@ -55,6 +55,8 @@ def build(statement, method: str | None = None, fx_source: str = "ecb") -> Repor
 
     stock_trades = ingest.load_stock_trades(statement)
     ins = market.instruments(sections)
+    if method is None and stock_trades["lot_method"].isna().all():
+        method = cb.infer_lot_method(stock_trades)  # statement without per-trade election codes
     positions, sells = cb.run(stock_trades, method=method, fx=rates)
     cycles, t_rounds = rounds.cycles_and_rounds(stock_trades, fx=rates)
     op = sections.get("Open Positions", pd.DataFrame(columns=["Symbol", "Close Price"]))

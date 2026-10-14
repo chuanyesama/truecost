@@ -8,6 +8,11 @@ SYMBOLS = {"AUD": "A$", "USD": "US$", "EUR": "€", "GBP": "£", "JPY": "¥", "C
 EN = {
     # app chrome
     "lang": "Language",
+    "sync_title": "🔄 IBKR auto-sync", "sync_button": "Sync now",
+    "sync_running": "Asking IBKR for your latest statement…",
+    "sync_waiting": "IBKR is still preparing the statement… ({n})",
+    "sync_done": "Synced — showing your latest trades.", "sync_failed": "Sync failed ({err}). Showing the last saved data.",
+    "sync_last": "Last synced {when}",
     "parse_error": "This file doesn't look like an IBKR **Activity Statement** CSV. In the IBKR Portal choose "
                    "Performance & Reports → Statements → **Activity**, format **CSV**, language **English**, and try again.",
     "offer_title": "Annual report (PDF)",
@@ -236,6 +241,11 @@ EN = {
 
 ZH = {
     "lang": "语言",
+    "sync_title": "🔄 IBKR 自动同步", "sync_button": "立即同步",
+    "sync_running": "正在向 IBKR 请求最新对账单…",
+    "sync_waiting": "IBKR 还在生成对账单…（{n}）",
+    "sync_done": "同步完成，显示的是最新交易。", "sync_failed": "同步失败（{err}），先显示上次保存的数据。",
+    "sync_last": "上次同步：{when}",
     "parse_error": "这个文件看起来不是 IBKR 的**活动对账单（Activity Statement）** CSV。请在 IBKR 网页版选择"
                    "业绩与报告 → 报表 → **活动**，格式选 **CSV**，语言选 **English**，再试一次。",
     "offer_title": "年度报告（PDF）",
