@@ -1,12 +1,15 @@
 """Generate a synthetic IBKR Activity Statement for the public demo.
 
-Nothing here comes from a real account: prices are random walks, trades are
-simulated. The behaviour is shaped to exercise every page of the app - a core
-position traded around (做T), an oversized swing, a zero-cost holding, a
-second market (SEK), many minimum-commission orders, and USD cash held while
-the AUD moves.
+The account is fictional, but trades are placed on real market days at prices
+inside each day's real high-low range, so they line up with real candles on
+the Chart tab. Daily prices are cached in data/sample/sample_prices.csv
+(fetched once with --refresh), which keeps tests offline and reproducible.
 
-Usage:  python scripts/make_sample.py [BASE] [OUT]
+The behaviour is shaped to exercise every page: a core position traded
+around, an oversized swing, a zero-cost holding, a second market (SEK), many
+minimum-commission orders, and USD cash held while the base currency moves.
+
+Usage:  python scripts/make_sample.py [BASE] [OUT] [--refresh]
         default: AUD -> data/sample/sample_statement.csv
 """
 from __future__ import annotations
@@ -15,35 +18,44 @@ import csv
 import random
 import sys
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 import pandas as pd
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-from src import costbasis as cb, fx  # noqa: E402
+from src import costbasis as cb, fx, prices  # noqa: E402
 
 OUT = ROOT / "data" / "sample" / "sample_statement.csv"
+PRICES_CSV = ROOT / "data" / "sample" / "sample_prices.csv"
 START, END = pd.Timestamp("2026-05-04"), pd.Timestamp("2026-10-09")
-rng = random.Random(7)
 
-
-def price_path(start: float, drift: float, vol: float) -> dict:
-    days = pd.bdate_range(START, END)
-    p, out = start, {}
-    for d in days:
-        p *= 1 + drift + rng.gauss(0, vol)
-        out[d] = round(p, 2)
-    return out
-
-
-PATHS = {
-    "NVDA": ("USD", price_path(135, 0.0012, 0.022)),
-    "MSFT": ("USD", price_path(450, 0.0004, 0.012)),
-    "PLTR": ("USD", price_path(120, 0.0025, 0.03)),
-    "RKLB": ("USD", price_path(30, -0.002, 0.04)),
-    "ERIC-B": ("SEK", price_path(85, -0.003, 0.025)),
+# symbol -> currency, IBKR listing exchange, exchange time zone
+SYMBOLS = {
+    "NVDA": ("USD", "NASDAQ", "America/New_York"),
+    "MSFT": ("USD", "NASDAQ", "America/New_York"),
+    "PLTR": ("USD", "NASDAQ", "America/New_York"),
+    "RKLB": ("USD", "NASDAQ", "America/New_York"),
+    "ERIC-B": ("SEK", "SFB", "Europe/Stockholm"),
 }
-DAYS = sorted(PATHS["NVDA"][1])
+# where a fictional holder of each base currency would live (statement clock)
+HOME_TZ = {"AUD": "Australia/Sydney", "USD": "America/New_York", "EUR": "Europe/Berlin",
+           "GBP": "Europe/London", "NZD": "Pacific/Auckland", "SGD": "Asia/Singapore", "HKD": "Asia/Hong_Kong"}
+
+
+def load_prices(refresh: bool = False) -> pd.DataFrame:
+    if refresh or not PRICES_CSV.exists():
+        frames = []
+        for sym, (_, exch, _) in SYMBOLS.items():
+            bars, _ = prices.fetch_bars(prices.yahoo_symbol(sym, exch), "1Y")
+            b = bars.reset_index(names="date")
+            b["date"] = b["date"].dt.tz_localize(None).dt.normalize()
+            b["symbol"] = sym
+            frames.append(b[["symbol", "date", "open", "high", "low", "close"]])
+        PRICES_CSV.parent.mkdir(parents=True, exist_ok=True)
+        pd.concat(frames).round(4).to_csv(PRICES_CSV, index=False)
+    df = pd.read_csv(PRICES_CSV, parse_dates=["date"])
+    return df[(df["date"] >= START) & (df["date"] <= END)]
 
 
 def ibkr_commission(ccy: str, qty: float, price: float) -> float:
@@ -52,18 +64,31 @@ def ibkr_commission(ccy: str, qty: float, price: float) -> float:
     return -max(49.0, 0.0005 * abs(qty) * price)  # SEK-style minimum
 
 
-def main(base: str = "AUD", out: Path = OUT) -> None:
+def main(base: str = "AUD", out: Path = OUT, refresh: bool = False) -> None:
+    rng = random.Random(7)
+    px = load_prices(refresh)
+    ohlc = {s: g.set_index("date") for s, g in px.groupby("symbol")}
+    DAYS = list(ohlc["NVDA"].index)
+    home = ZoneInfo(HOME_TZ.get(base, "UTC"))
     rates = fx.Rates(fx.ecb_table(base), base)
     base_per = lambda ccy, d: rates(ccy, d)
     trades, fx_rows, deposits, interest = [], [], [], []
 
-    def trade(sym: str, day, qty: float, hour: int = 15, minute: int = 0):
-        ccy, path = PATHS[sym]
-        px = round(path[day] * (1 + rng.uniform(-0.004, 0.004)), 2)
-        t = day + pd.Timedelta(hours=hour, minutes=minute)
-        trades.append({"time": t, "asset": "Stocks", "currency": ccy, "symbol": sym, "qty": qty,
-                       "price": px, "proceeds": -qty * px, "commission": ibkr_commission(ccy, qty, px),
-                       "close": path[day]})
+    def day_of(sym: str, day):
+        idx = ohlc[sym].index
+        return idx[idx.searchsorted(day, side="right") - 1]  # same day, or the last one before it
+
+    def trade(sym: str, day, qty: float, at: str = "mid", hhmm: str = "11:00"):
+        ccy, _, ex_tz = SYMBOLS[sym]
+        d = day_of(sym, day)
+        o, h, lo, c = ohlc[sym].loc[d, ["open", "high", "low", "close"]]
+        frac = {"low": 0.12, "high": 0.88, "mid": rng.uniform(0.3, 0.7)}[at]
+        price = round(lo + frac * (h - lo), 2)
+        local = pd.Timestamp(f"{d:%Y-%m-%d} {hhmm}").tz_localize(ex_tz)
+        when = local.tz_convert(home).tz_localize(None)  # IBKR writes the holder's local time
+        trades.append({"time": when, "asset": "Stocks", "currency": ccy, "symbol": sym, "qty": qty,
+                       "price": price, "proceeds": -qty * price, "commission": ibkr_commission(ccy, qty, price),
+                       "close": c})
 
     def convert(day, amount: float, ccy: str):
         if ccy == base:
@@ -78,37 +103,35 @@ def main(base: str = "AUD", out: Path = OUT) -> None:
         convert(d, amt * scale * 0.95, "USD")
     convert(DAYS[30], 6000 * scale, "SEK")
 
-    # NVDA: core position + frequent 做T, ends at zero cost
-    trade("NVDA", DAYS[1], 150)
-    for i in range(3, len(DAYS) - 5, 4):
-        d = DAYS[i]
+    # NVDA: core position traded around (sell into strength, buy back on dips), ends at zero cost
+    trade("NVDA", DAYS[1], 150, "mid", "10:05")
+    for i in range(3, len(DAYS) - 6, 4):
         q = rng.choice([20, 30, 40])
-        trade("NVDA", d, -q, 14, 30)
-        trade("NVDA", DAYS[i + 1], q, 15, 10)
-    trade("NVDA", DAYS[-8], -145, 16)  # leaves 5 shares at zero cost
+        trade("NVDA", DAYS[i], -q, "high", "14:30")
+        trade("NVDA", DAYS[i + 1], q, "low", "10:40")
+    trade("NVDA", DAYS[-6], -145, "high", "15:10")  # keeps 5 shares
 
-    # MSFT: steady holding, a few small averaging-down buys (min commission)
-    for i in range(2, 100, 9):
-        trade("MSFT", DAYS[i], rng.choice([1, 2, 3]))
-        trade("MSFT", DAYS[i], 1, 15, 4)  # split order: mergeable
+    # MSFT: steady holding, small adds split into two orders (minimum commission twice)
+    for i in range(2, min(100, len(DAYS)), 9):
+        trade("MSFT", DAYS[i], rng.choice([1, 2, 3]), "mid", "10:30")
+        trade("MSFT", DAYS[i], 1, "mid", "10:34")
 
     # PLTR: intraday scalps, many small orders
     for i in range(5, len(DAYS) - 3, 3):
-        d = DAYS[i]
         q = rng.choice([5, 8, 10])
-        trade("PLTR", d, q, 14, 0)
-        trade("PLTR", d, -q, 14 + rng.choice([1, 2]), 20)
+        trade("PLTR", DAYS[i], q, "mid", "10:00")
+        trade("PLTR", DAYS[i], -q, "mid", rng.choice(["11:20", "13:45", "15:30"]))
 
-    # RKLB: oversized swing that goes wrong (加仓波段)
-    trade("RKLB", DAYS[20], 20)
-    trade("RKLB", DAYS[25], 600)
-    trade("RKLB", DAYS[40], -600)
-    trade("RKLB", DAYS[45], -20)
+    # RKLB: oversized swing bought at the top, sold at the bottom
+    trade("RKLB", DAYS[20], 20, "mid", "10:15")
+    trade("RKLB", DAYS[25], 150, "high", "12:00")
+    trade("RKLB", DAYS[40], -150, "low", "14:00")
+    trade("RKLB", DAYS[45], -20, "mid", "11:00")
 
-    # ERIC-B: a market the user doesn't know well
+    # ERIC-B: a market the holder doesn't know well (Stockholm hours)
     for i in (32, 38, 50, 55):
-        trade("ERIC-B", DAYS[i], 300)
-        trade("ERIC-B", DAYS[i + 3], -300)
+        trade("ERIC-B", DAYS[i], 300, "high", "10:30")
+        trade("ERIC-B", DAYS[i + 3], -300, "low", "15:00")
 
     for m in range(6, 11):
         interest.append((pd.Timestamp(f"2026-{m:02d}-05"), round(rng.uniform(2, 9), 2)))
@@ -129,10 +152,13 @@ def main(base: str = "AUD", out: Path = OUT) -> None:
     t["basis"], t["realized"] = basis, realized
     positions, _ = cb.run(t)
 
+    generated = (END + pd.Timedelta(days=3, hours=9)).tz_localize(home)
     rows: list[list] = []
     w = rows.append
     w(["Statement", "Header", "Field Name", "Field Value"])
     w(["Statement", "Data", "Title", "Activity Statement (SAMPLE - synthetic data)"])
+    w(["Statement", "Data", "Period", f"{START:%B %d, %Y} - {END:%B %d, %Y}"])
+    w(["Statement", "Data", "WhenGenerated", f"{generated:%Y-%m-%d, %H:%M:%S} {generated.tzname()}"])
     w(["Account Information", "Header", "Field Name", "Field Value"])
     for k, v in [("Name", "Demo Investor"), ("Account", "U0000000"), ("Account Type", "Individual"),
                  ("Base Currency", base)]:
@@ -162,7 +188,7 @@ def main(base: str = "AUD", out: Path = OUT) -> None:
        "Cost Price", "Cost Basis", "Close Price", "Value", "Unrealized P/L", "Code"])
     for sym, p in positions.items():
         if abs(p.shares) > 1e-9:
-            close = PATHS[sym][1][DAYS[-1]]
+            close = float(ohlc[sym]["close"].iloc[-1])
             w(["Open Positions", "Data", "Summary", "Stocks", p.currency, sym, f"{p.shares:g}", "1",
                f"{p.lot_avg_cost:.4f}", f"{p.lot_avg_cost * p.shares:.2f}", f"{close}", f"{close * p.shares:.2f}",
                f"{(close - p.lot_avg_cost) * p.shares:.2f}", ""])
@@ -173,6 +199,11 @@ def main(base: str = "AUD", out: Path = OUT) -> None:
         if ccy != base:
             w(["Forex Balances", "Data", "Forex", base, ccy, "0", "0", "0", f"{base_per(ccy, END):.6f}", "0", "0", ""])
 
+    w(["Financial Instrument Information", "Header", "Asset Category", "Symbol", "Description", "Conid",
+       "Security ID", "Underlying", "Listing Exch", "Multiplier", "Type", "Code"])
+    for sym, (_, exch, _) in SYMBOLS.items():
+        w(["Financial Instrument Information", "Data", "Stocks", sym, sym, "", "", sym, exch, "1", "COMMON", ""])
+
     out.parent.mkdir(parents=True, exist_ok=True)
     with open(out, "w", newline="", encoding="utf-8") as f:
         csv.writer(f).writerows(rows)
@@ -180,4 +211,5 @@ def main(base: str = "AUD", out: Path = OUT) -> None:
 
 
 if __name__ == "__main__":
-    main(sys.argv[1] if len(sys.argv) > 1 else "AUD", Path(sys.argv[2]) if len(sys.argv) > 2 else OUT)
+    args = [a for a in sys.argv[1:] if a != "--refresh"]
+    main(args[0] if args else "AUD", Path(args[1]) if len(args) > 1 else OUT, "--refresh" in sys.argv)

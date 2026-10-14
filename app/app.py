@@ -12,6 +12,7 @@ from pathlib import Path
 
 import pandas as pd
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 import streamlit as st
 import streamlit.components.v1 as components
 
@@ -20,7 +21,7 @@ sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "app"))
 import analytics  # noqa: E402
 from i18n import Translator, money  # noqa: E402
-from src import costs, report, rounds, style  # noqa: E402
+from src import costs, prices, report, rounds, style  # noqa: E402
 
 LOCAL_FILES = [] if os.environ.get("TRUECOST_DEMO") else sorted((ROOT / "data" / "raw").glob("*.csv"))  # never committed
 DEMO = ROOT / "data" / "sample" / "sample_statement.csv"     # synthetic, safe to publish
@@ -225,7 +226,8 @@ try:  # the theme switch reloads the page; reopen the tab the viewer was on
     open_tab = tab_names[int(st.query_params.get("tab", 0))]
 except (ValueError, IndexError):
     open_tab = tab_names[0]
-tab_overview, tab_cost, tab_t, tab_fees, tab_style, tab_fx, tab_trades = st.tabs(tab_names, default=open_tab)
+(tab_overview, tab_cost, tab_chart, tab_t, tab_fees, tab_style, tab_fx,
+ tab_trades) = st.tabs(tab_names, default=open_tab)
 
 # ---------- overview ----------
 with tab_overview:
@@ -343,6 +345,78 @@ with tab_cost:
         st.dataframe(view,
                      hide_index=True, width="stretch",
                      height=38 * (min(len(view), 25) + 1) + 4)  # up to 25 rows, then scroll inside
+
+# ---------- chart ----------
+@st.cache_data(show_spinner=False, ttl=900, max_entries=200)
+def bars_for(ticker: str, range_key: str):
+    return prices.fetch_bars(ticker, range_key)
+
+
+# candle colours follow local convention: green-up in English, red-up in Chinese
+UP, DOWN = ("#e34948", "#1baf7a") if lang == "中文" else ("#1baf7a", "#e34948")
+
+with tab_chart:
+    st.subheader(t("chart_title"))
+    st_trades = r.stock_trades
+    last_trade = st_trades.groupby("symbol")["time"].max().sort_values(ascending=False)
+    ccy_of = st_trades.groupby("symbol")["currency"].first()
+    ins = r.instruments.set_index("symbol") if not r.instruments.empty else pd.DataFrame(columns=["exchange", "underlying"])
+    left, right = st.columns([2, 5])
+    pick = left.selectbox(t("chart_stock"), list(last_trade.index), format_func=lambda s: f"{s} · {ccy_of[s]}")
+    rk = right.segmented_control(t("chart_range"), list(prices.RANGES), default="6M", key="chart_range") or "6M"
+    exch = ins["exchange"].get(pick) if pick in ins.index else None
+    ticker = (prices.yahoo_symbol(ins["quote"][pick], exch, ins["underlying"][pick]) if pick in ins.index
+              else None)
+    if ticker is None:
+        st.info(t("chart_unmapped", sym=pick, exch=exch or "?"))
+    else:
+        try:
+            with st.spinner(t("chart_loading")):
+                bars, ex_tz = bars_for(ticker, rk)
+        except Exception:
+            bars = None
+            st.warning(t("chart_no_data", ticker=ticker))
+        if bars is not None and not bars.empty:
+            intraday = rk in prices.INTRADAY
+            mine = st_trades[st_trades["symbol"] == pick]
+            marks = prices.place_trades(mine, bars, r.statement_tz, intraday)
+            fmt = "%m-%d %H:%M" if intraday else "%Y-%m-%d"
+            label = pd.Series(bars.index.strftime(fmt), index=bars.index)
+            rising = bars["close"] >= bars["open"]
+
+            fig = make_subplots(rows=2, cols=1, shared_xaxes=True, row_heights=[0.8, 0.2], vertical_spacing=0.03)
+            fig.add_trace(go.Candlestick(
+                x=label, open=bars["open"], high=bars["high"], low=bars["low"], close=bars["close"],
+                increasing=dict(line=dict(color=UP), fillcolor=UP), decreasing=dict(line=dict(color=DOWN), fillcolor=DOWN),
+                name=ticker, showlegend=False), row=1, col=1)
+            fig.add_trace(go.Bar(x=label, y=bars["volume"], marker=dict(color=rising.map({True: UP, False: DOWN}),
+                                 opacity=0.45), name=t("chart_volume"), showlegend=False,
+                                 hovertemplate="%{x}<br>" + t("chart_volume") + " %{y:,.0f}<extra></extra>"), row=2, col=1)
+
+            pad = (bars["high"].max() - bars["low"].min()) * 0.035
+            for side, color, edge, sign in [("B", POS, "low", -1), ("S", NEG, "high", 1)]:
+                mk = marks[marks["side"] == side]
+                if mk.empty:
+                    continue
+                y = bars.loc[mk["bar"], edge].to_numpy() + sign * pad
+                fig.add_trace(go.Scatter(
+                    x=label[mk["bar"]].to_numpy(), y=y, mode="markers+text", text=[side] * len(mk),
+                    textposition="middle center", textfont=dict(color="white", size=12),
+                    marker=dict(size=22, color=color, line=dict(width=1.5, color="white")),
+                    name=t("chart_" + side), showlegend=True,
+                    customdata=mk[["count", "qty", "avg_price"]].to_numpy(),
+                    hovertemplate="%{x}<br><b>" + t("chart_" + side) + "</b> · " + t("chart_hover")
+                    + "<extra></extra>"), row=1, col=1)
+
+            fig.update_layout(height=640, margin=dict(t=30, b=10, l=10, r=10), hovermode="closest",
+                              legend=dict(orientation="h", y=1.06, x=0), xaxis_rangeslider_visible=False, **CLEAR)
+            fig.update_xaxes(type="category", nticks=8, gridcolor=GRID, showspikes=True, spikethickness=1)
+            fig.update_yaxes(gridcolor=GRID, title_text=t("price_axis", ccy=ccy_of[pick]), row=1, col=1)
+            fig.update_yaxes(gridcolor=GRID, showticklabels=False, row=2, col=1)
+            plot(fig)
+
+            n_in = int(marks["count"].sum()) if not marks.empty else 0
+            st.caption(t("chart_caption", shown=n_in, total=len(mine), ticker=ticker, tz=ex_tz))
 
 # ---------- round trips ----------
 with tab_t:

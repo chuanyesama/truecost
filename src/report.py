@@ -6,6 +6,7 @@ from dataclasses import dataclass
 import pandas as pd
 
 from . import costbasis as cb, fx, ingest, ledger, returns, rounds
+from . import prices as market
 
 
 @dataclass
@@ -24,7 +25,9 @@ class Report:
     stock_trades: pd.DataFrame
     rates: object
     cycles: pd.DataFrame         # flat-to-flat holding cycles per symbol
-    rounds: pd.DataFrame         # 做T rounds inside cycles
+    rounds: pd.DataFrame         # round trips inside cycles
+    instruments: pd.DataFrame    # symbol -> listing exchange, underlying
+    statement_tz: str            # IANA zone of the statement's trade times
     net_deposits: float
 
     @property
@@ -51,6 +54,7 @@ def build(statement, method: str | None = None, fx_source: str = "ecb") -> Repor
     rate_end = lambda ccy: end_rates.get(ccy) or rates(ccy, end)
 
     stock_trades = ingest.load_stock_trades(statement)
+    ins = market.instruments(sections)
     positions, sells = cb.run(stock_trades, method=method, fx=rates)
     cycles, t_rounds = rounds.cycles_and_rounds(stock_trades, fx=rates)
     op = sections.get("Open Positions", pd.DataFrame(columns=["Symbol", "Close Price"]))
@@ -79,5 +83,6 @@ def build(statement, method: str | None = None, fx_source: str = "ecb") -> Repor
         holdings=cb.holdings(positions), decomposition=decomp, sells=sells, cash=cash,
         attribution=attribution, nav_end=nav_end, prices=prices,
         stock_trades=stock_trades, rates=rates, cycles=cycles, rounds=t_rounds,
+        instruments=ins, statement_tz=market.statement_timezone(sections, stock_trades, dict(zip(ins.symbol, ins.exchange))),
         net_deposits=ledger.net_deposits_base(flows, rates),
     )

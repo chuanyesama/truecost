@@ -54,7 +54,16 @@ EN = {
     "as_of": "As of {date} · base currency {base} · rates: {source}",
     "reconciled": "✅ Reconciled with your account: ending NAV {nav} − net deposits {dep} = {pl}",
     "not_reconciled": "⚠️ Off by {diff} — some data may be missing from the statement",
-    "tabs": ["Overview", "Real cost", "Round trips", "Fees", "Trading style", "Currency", "Trades"],
+    "tabs": ["Overview", "Real cost", "Chart", "Round trips", "Fees", "Trading style", "Currency", "Trades"],
+    "chart_title": "Price chart with your trades", "chart_stock": "Stock", "chart_range": "Range",
+    "chart_loading": "Loading prices…", "chart_volume": "Volume",
+    "chart_B": "Buy", "chart_S": "Sell",
+    "chart_hover": "%{customdata[0]} trade(s), %{customdata[1]:,.4g} shares @ avg %{customdata[2]:,.2f}",
+    "chart_unmapped": "No price data for {sym} (exchange {exch}) yet.",
+    "chart_no_data": "Couldn't load prices for {ticker} right now — try again in a minute.",
+    "chart_caption": "{shown} of your {total} trades in {ticker} fall in this range; trades in the same bar are combined "
+                     "into one marker (hover for details). Times in the exchange's time zone ({tz}); pre/post-market "
+                     "included on intraday ranges. Prices: Yahoo Finance, may be delayed.",
     "parsing": "Reading statement…", "costing": "Adding up fees…", "profiling": "Analysing your habits…",
 
     # overview
@@ -270,7 +279,15 @@ ZH = {
     "as_of": "截至 {date} · 基础货币 {base} · 汇率：{source}",
     "reconciled": "✅ 已与账户对账：期末净值 {nav} − 净入金 {dep} = {pl}",
     "not_reconciled": "⚠️ 对账差异 {diff}，对账单中可能缺少部分数据",
-    "tabs": ["总览", "真实成本", "做T记录", "费用", "交易风格", "汇率拆解", "交易明细"],
+    "tabs": ["总览", "真实成本", "K线图", "做T记录", "费用", "交易风格", "汇率拆解", "交易明细"],
+    "chart_title": "K 线图与你的买卖点", "chart_stock": "股票", "chart_range": "时间范围",
+    "chart_loading": "正在加载行情…", "chart_volume": "成交量",
+    "chart_B": "买入", "chart_S": "卖出",
+    "chart_hover": "%{customdata[0]} 笔，共 %{customdata[1]:,.4g} 股，均价 %{customdata[2]:,.2f}",
+    "chart_unmapped": "暂时没有 {sym}（交易所 {exch}）的行情数据。",
+    "chart_no_data": "暂时无法加载 {ticker} 的行情，请稍后再试。",
+    "chart_caption": "你在 {ticker} 的 {total} 笔交易中，有 {shown} 笔落在这个时间范围内；同一根 K 线里的多笔交易合并成一个标记"
+                     "（鼠标悬停看明细）。时间为交易所当地时间（{tz}）；日内范围包含盘前盘后。行情来自 Yahoo Finance，可能有延迟。",
     "parsing": "正在解析对账单…", "costing": "正在计算费用…", "profiling": "正在分析交易习惯…",
 
     "total_pl": "总盈亏（{base}）", "from_trading": "📈 交易赚的", "from_fx": "💱 汇率给的", "other": "其他",

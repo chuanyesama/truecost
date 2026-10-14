@@ -183,7 +183,7 @@ def profile(r) -> Profile:
             ins.append(Insight("warn", "weak_market", {
                 "ccy": worst_ccy, "pl": by_ccy[worst_ccy], "best": by_ccy.idxmax(), "best_pl": by_ccy.max()}))
 
-    if fx_total > 0 and fx_total > abs(r.total_pl) * 0.5:
+    if r.total_pl > 0 and fx_total > 0.5 * r.total_pl:
         ins.append(Insight("info", "fx_driven", {"fx": fx_total, "total": r.total_pl}))
 
     return Profile(style, tags, metrics, mix, ins)
