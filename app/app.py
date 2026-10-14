@@ -274,17 +274,23 @@ with tab_cost:
         h["zero_cost"] = h["diluted_cost"] <= 0
         h["vs_ibkr"] = 100 * (h["price"] / h["ibkr_avg_cost"] - 1)
         h["vs_diluted"] = (100 * (h["price"] / h["diluted_cost"] - 1)).where(~h["zero_cost"])
+        # a zero-cost holding has a negative diluted cost: show the words, not the number
+        zero_label = t("zero_cost")
+        extra = [t("already_up", amount=money(-d * n, c, sign=False)) for d, n, c in
+                 zip(h["diluted_cost"], h["shares"], h["currency"])]
         show = pd.DataFrame({
             t("c_symbol"): h["symbol"], t("c_shares"): h["shares"], t("c_price"): h["price"],
-            t("c_ibkr_cost"): h["ibkr_avg_cost"], t("c_diluted"): h["diluted_cost"],
-            t("c_zero"): h["zero_cost"].map({True: t("zero_cost"), False: ""}),
-            t("c_vs_ibkr"): h["vs_ibkr"], t("c_vs_diluted"): txt(h["vs_diluted"], "{:+.1f}%", t("c_zero")),
-            t("c_ibkr_cost_base", base=B): h["ibkr_avg_cost_base"], t("c_diluted_base", base=B): h["diluted_cost_base"],
+            t("c_ibkr_cost"): h["ibkr_avg_cost"],
+            t("c_diluted"): txt(h["diluted_cost"].where(~h["zero_cost"]), "{:,.2f}", zero_label),
+            t("c_vs_ibkr"): h["vs_ibkr"],
+            t("c_vs_diluted"): [e if z else f"{v:+.1f}%" for z, e, v in zip(h["zero_cost"], extra, h["vs_diluted"])],
+            t("c_ibkr_cost_base", base=B): h["ibkr_avg_cost_base"],
+            t("c_diluted_base", base=B): txt(h["diluted_cost_base"].where(~h["zero_cost"]), "{:,.2f}", zero_label),
             t("c_cycle_realized"): h["realized_this_cycle"],
         })
         cols = show.columns
-        num = {cols[1]: "{:,.4g}", cols[2]: "{:,.2f}", cols[3]: "{:,.2f}", cols[4]: "{:,.2f}",
-               cols[6]: "{:+.1f}%", cols[8]: "{:,.2f}", cols[9]: "{:,.2f}", cols[10]: "{:+,.0f}"}
+        num = {cols[1]: "{:,.4g}", cols[2]: "{:,.2f}", cols[3]: "{:,.2f}",
+               cols[5]: "{:+.1f}%", cols[7]: "{:,.2f}", cols[9]: "{:+,.0f}"}
         st.dataframe(show.style.format(num, na_rep="—"), hide_index=True, width="stretch")
 
         for row in h.itertuples():
@@ -302,8 +308,9 @@ with tab_cost:
         for col, name, color, sym in [("ibkr_avg_cost", t("s_ibkr_cost"), INK2, "circle-open"),
                                       ("diluted_cost", t("s_diluted"), POS, "circle"),
                                       ("price", t("s_price"), NEG, "diamond")]:
+            vals = h[col].where(~h["zero_cost"]) if col == "diluted_cost" else h[col]
             fig.add_trace(go.Scatter(
-                x=h[col] / h["price"] * 100 - 100, y=h["symbol"], mode="markers", name=name,
+                x=vals / h["price"] * 100 - 100, y=h["symbol"], mode="markers", name=name,
                 marker=dict(size=16, color=color, symbol=sym, line=dict(width=2, color=color)),
                 customdata=h[col], hovertemplate="%{y} " + name + ": %{customdata:,.2f}<extra></extra>",
             ))
@@ -339,8 +346,10 @@ with tab_cost:
             t("c_cycles"): per["cycles"], t("c_trades"): per["trades"],
             t("c_closed_pl", base=B): txt(per["closed_base"].where(per["closed_base"] != 0), "{:+,.0f}"),
             t("c_last_trade"): txt(per["last"], "{:%Y-%m-%d}"),
-            t("c_cur_diluted"): txt(per["diluted_cost"], "{:,.2f}"),
-            t("c_cur_diluted_base", base=B): txt(per["diluted_cost_base"], "{:,.2f}"),
+            t("c_cur_diluted"): [t("zero_cost") if d <= 0 else ("—" if pd.isna(d) else f"{d:,.2f}")
+                                 for d in per["diluted_cost"]],
+            t("c_cur_diluted_base", base=B): [t("zero_cost") if d <= 0 else ("—" if pd.isna(d) else f"{d:,.2f}")
+                                              for d in per["diluted_cost_base"]],
         })
         st.dataframe(view,
                      hide_index=True, width="stretch",

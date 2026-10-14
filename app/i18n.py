@@ -86,7 +86,7 @@ EN = {
                          "**Diluted cost** = (total bought − total sold) ÷ shares held, since the position was last flat. "
                          "Profitable round trips push it down.",
     "no_holdings": "No open positions.",
-    "zero_cost": "✅ zero cost",
+    "zero_cost": "✅ zero cost", "already_up": "already up {amount}",
     "zero_cost_msg": "🎉 **{sym} is now a zero-cost holding**: you've taken back everything you put in plus {ccy} {extra:,.0f}. "
                      "The remaining {shares:,.4g} shares ({ccy} {value:,.0f}) are pure profit — IBKR still shows a cost of {ibkr:,.2f}.",
     "better_msg": "**{sym}**: IBKR shows {ibkr:+.1f}%; counting your round trips it's actually **{real:+.1f}%**.",
@@ -305,7 +305,7 @@ ZH = {
     "real_cost_caption": "**IBKR 成本** = 剩余批次的平均价（不含做 T 盈亏）。"
                          "**摊薄成本** = (买入总额 − 卖出总额) ÷ 持股数，自上次清仓起算；做 T 赚了它就变低。",
     "no_holdings": "当前没有持仓。",
-    "zero_cost": "✅ 零成本",
+    "zero_cost": "✅ 零成本", "already_up": "已多赚 {amount}",
     "zero_cost_msg": "🎉 **{sym} 已是零成本持股**：本金已经全部赚回，还多赚了 {ccy} {extra:,.0f}。"
                      "剩下的 {shares:,.4g} 股（市值 {ccy} {value:,.0f}）全部是利润。IBKR 却仍显示成本 {ibkr:,.2f}。",
     "better_msg": "**{sym}**：IBKR 显示 {ibkr:+.1f}%，算上做 T 实际是 **{real:+.1f}%**。",
