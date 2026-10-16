@@ -102,7 +102,7 @@ def _close(pos: Position, qty: float, method: str, target_unit: float | None = N
     return pieces
 
 
-def run(trades: pd.DataFrame, method: str | None = None, fx=None):
+def run(trades: pd.DataFrame, method: str | None = None, fx=None, default_method: str = "FIFO"):
     """Replay trades.
 
     `method` forces one lot-matching method for every sell (to compare "what
@@ -127,7 +127,7 @@ def run(trades: pd.DataFrame, method: str | None = None, fx=None):
         closing = min(abs(t.qty), abs(held)) if held * t.qty < 0 else 0.0
         opening = abs(t.qty) - closing
         if closing > EPS:
-            m = method or t.lot_method or "FIFO"
+            m = method or t.lot_method or default_method
             target = abs(t.ibkr_basis) / abs(t.qty) if t.ibkr_basis else None
             pieces = _close(pos, closing, m, target)
             lot_value = sum(q * l.unit_cost for l, q in pieces)

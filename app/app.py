@@ -36,15 +36,26 @@ def local_files() -> list[Path]:
     return sorted(RAW.glob("*.csv"), key=lambda p: p.stat().st_mtime, reverse=True)
 
 
-def flex_credentials() -> tuple[str | None, str | None]:
-    """Auto-sync is a paid feature; for now it runs only where a token is configured locally."""
+ACTIVITY_XML = RAW / "flex_activity.xml"  # history up to the last business day (refetched daily)
+TODAY_XML = RAW / "flex_today.xml"        # today's executions (refetched on every refresh)
+
+
+def _setting(name: str) -> str | None:
     try:
-        token, query = st.secrets.get("IBKR_FLEX_TOKEN"), st.secrets.get("IBKR_FLEX_QUERY_ID")
+        v = st.secrets.get(name)
     except Exception:  # no secrets file
-        token = query = None
-    token = token or os.environ.get("IBKR_FLEX_TOKEN")
-    query = query or os.environ.get("IBKR_FLEX_QUERY_ID")
-    return (str(token), str(query)) if token and query else (None, None)
+        v = None
+    v = v or os.environ.get(name)
+    return str(v) if v else None
+
+
+def flex_credentials() -> tuple[str | None, str | None, str | None]:
+    """Auto-sync is a paid feature; for now it runs only where a token is configured locally.
+    Returns (token, activity query id, today's trade-confirmation query id or None)."""
+    token, query = _setting("IBKR_FLEX_TOKEN"), _setting("IBKR_FLEX_QUERY_ID")
+    if not (token and query):
+        return None, None, None
+    return token, query, _setting("IBKR_FLEX_TODAY_QUERY_ID")
 DEMO = ROOT / "data" / "sample" / "sample_statement.csv"     # synthetic, safe to publish
 
 # reference palette (dataviz skill): gain / loss poles, recessive ink
@@ -109,21 +120,58 @@ def _tmp(data: bytes):
 
 
 @st.cache_data(show_spinner=False, ttl=3600, max_entries=20)
-def load(data: bytes, method: str | None, source: str):
+def load(data: bytes, method: str | None, source: str, live: tuple = ()):
+    """live: (prices, rates) as tuples of (key, value): latest quotes and exchange rates
+    that replace the statement's closing marks."""
+    px, rates_now = live if live else ((), ())
     with _tmp(data) as path:
-        return report.build(path, method, source)
+        return report.build(path, method, source, dict(px) or None, dict(rates_now) or None)
+
+
+@st.cache_data(show_spinner=False, ttl=300, max_entries=50)
+def latest_rate(ccy: str, base: str) -> float | None:
+    try:
+        return prices.latest_fx(ccy, base)
+    except Exception:
+        return None
+
+
+@st.cache_data(show_spinner=False, ttl=300, max_entries=200)
+def latest_price(ticker: str) -> float | None:
+    try:
+        bars, _ = prices.fetch_bars(ticker, "1D")
+        return float(bars["close"].iloc[-1])
+    except Exception:
+        return None
+
+
+def live_quotes(r) -> tuple:
+    """Latest price for every holding (Yahoo, ~15 min delayed)."""
+    ins = r.instruments.set_index("symbol") if not r.instruments.empty else None
+    out = []
+    for sym in r.holdings["symbol"] if not r.holdings.empty else []:
+        if ins is None or sym not in ins.index:
+            continue
+        tk = prices.yahoo_symbol(ins["quote"][sym], ins["exchange"][sym], ins["underlying"][sym])
+        p = latest_price(tk) if tk else None
+        if p:
+            out.append((sym, p))
+    ccys = set(r.holdings["currency"]) if not r.holdings.empty else set()
+    ccys |= set(r.cash.loc[r.cash["balance"].abs() > 0.01, "currency"]) if not r.cash.empty else set()
+    rates_now = [(c, v) for c in sorted(ccys - {r.base}) if (v := latest_rate(c, r.base))]
+    return (tuple(sorted(out)), tuple(rates_now)) if out or rates_now else ()
 
 
 @st.cache_data(show_spinner=False, ttl=3600, max_entries=20)
-def load_costs(data: bytes, method: str | None, source: str):
-    r = load(data, method, source)
+def load_costs(data: bytes, method: str | None, source: str, live: tuple = ()):
+    r = load(data, method, source, live)
     with _tmp(data) as path:
         return costs.analyse(r, path)
 
 
 @st.cache_data(show_spinner=False, ttl=3600, max_entries=20)
-def load_profile(data: bytes, method: str | None, source: str):
-    return style.profile(load(data, method, source))
+def load_profile(data: bytes, method: str | None, source: str, live: tuple = ()):
+    return style.profile(load(data, method, source, live))
 
 
 def set_theme(name: str) -> None:
@@ -159,12 +207,24 @@ with st.sidebar:
         st.markdown(t("how_to_steps"))
     method_key = st.selectbox(t("lot_method"), list(METHODS), format_func=t, help=t("lot_method_help"))
 
-def sync_now(token: str, query: str) -> None:
+def sync_now(token: str, query: str, today_query: str | None) -> None:
+    """Refresh from IBKR. Today's executions are fetched every time (a few seconds); the
+    history is refetched only when the cached copy is from an earlier day or missing."""
     box = st.sidebar.empty()
-    box.info(t("sync_running"))
     try:
-        xml = flex.fetch(token, query, on_wait=lambda n: box.info(t("sync_waiting", n=n)))
-        flex.save_statement(xml, FLEX_CACHE)
+        stale = (not ACTIVITY_XML.exists()
+                 or time.time() - ACTIVITY_XML.stat().st_mtime > SYNC_EVERY
+                 or pd.Timestamp.fromtimestamp(ACTIVITY_XML.stat().st_mtime).date() < pd.Timestamp.now().date())
+        if stale:
+            box.info(t("sync_running"))
+            ACTIVITY_XML.write_text(flex.fetch(token, query, on_wait=lambda n: box.info(t("sync_waiting", n=n))),
+                                    encoding="utf-8")
+        if today_query:
+            box.info(t("sync_today"))
+            TODAY_XML.write_text(flex.fetch(token, today_query, wait=2), encoding="utf-8")
+        flex.save_statement(ACTIVITY_XML.read_text(encoding="utf-8"), FLEX_CACHE,
+                            TODAY_XML.read_text(encoding="utf-8") if today_query and TODAY_XML.exists() else None)
+        st.session_state.synced_at = pd.Timestamp.now()
         box.success(t("sync_done"))
     except flex.FlexError as e:
         box.error(t("sync_failed", err=str(e)))
@@ -172,17 +232,20 @@ def sync_now(token: str, query: str) -> None:
         box.error(t("sync_failed", err=type(e).__name__))
 
 
-token, query = flex_credentials()
-if token and up is None and not os.environ.get("TRUECOST_DEMO"):
+token, query, today_query = flex_credentials()
+synced = bool(token and up is None and not os.environ.get("TRUECOST_DEMO"))
+if synced:
     with st.sidebar:
         st.markdown("##### " + t("sync_title"))
-        fresh = FLEX_CACHE.exists() and time.time() - FLEX_CACHE.stat().st_mtime < SYNC_EVERY
-        if st.button(t("sync_button"), width="stretch") or (not fresh and not st.session_state.get("auto_synced")):
-            st.session_state.auto_synced = True  # at most one automatic sync per visit
-            sync_now(token, query)
+        # every visit starts with a refresh (today's trades take seconds); the button repeats it
+        if st.button(t("sync_button"), type="primary", width="stretch") or not st.session_state.get("auto_synced"):
+            st.session_state.auto_synced = True
+            sync_now(token, query, today_query)
         if FLEX_CACHE.exists():
             age = pd.Timestamp.fromtimestamp(FLEX_CACHE.stat().st_mtime)
-            st.caption(t("sync_last", when=f"{age:%Y-%m-%d %H:%M}"))
+            st.caption(t("sync_last", when=f"{age:%Y-%m-%d %H:%M:%S}"))
+        if not today_query:
+            st.caption(t("sync_no_today"))
 
 LOCAL_FILES = local_files()
 demo = False
@@ -211,6 +274,12 @@ with st.sidebar:
 
 with st.spinner(t("parsing")):
     r = load(raw, METHODS[method_key], source)
+    LIVE = ()
+    if synced and not demo and up is None:
+        LIVE = live_quotes(r)
+        if LIVE:
+            r = load(raw, METHODS[method_key], source, LIVE)
+            st.sidebar.caption(t("live_prices", when=f"{pd.Timestamp.now():%H:%M}"))
 B = r.base
 if up is not None:
     analytics.track_once("statement_uploaded", base=B, markets=int(r.stock_trades["currency"].nunique()),
@@ -580,7 +649,7 @@ with tab_t:
 # ---------- fees ----------
 with tab_fees:
     with st.spinner(t("costing")):
-        fc = load_costs(raw, METHODS[method_key], source)
+        fc = load_costs(raw, METHODS[method_key], source, LIVE)
     gross = trading + fc.stock
     st.subheader(t("fees_title"))
     st.caption(t("fees_caption"))
@@ -672,7 +741,7 @@ def render_insight(i: style.Insight) -> str:
 
 with tab_style:
     with st.spinner(t("profiling")):
-        p = load_profile(raw, METHODS[method_key], source)
+        p = load_profile(raw, METHODS[method_key], source, LIVE)
     mt = p.metrics
     label = t("style_" + p.style)
     if p.tags:

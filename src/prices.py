@@ -152,6 +152,12 @@ def fetch_bars(ticker: str, range_key: str) -> tuple[pd.DataFrame, str]:
     return bars, tz
 
 
+def latest_fx(ccy: str, base: str) -> float:
+    """Latest exchange rate: base units per 1 unit of ccy."""
+    bars, _ = fetch_bars(f"{ccy}{base}=X", "1D")
+    return float(bars["close"].iloc[-1])
+
+
 def place_trades(trades: pd.DataFrame, bars: pd.DataFrame, statement_tz: str, intraday: bool) -> pd.DataFrame:
     """Aggregate the user's trades into the bars they fall in, per side.
 

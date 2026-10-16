@@ -151,7 +151,41 @@ CASH_SECTIONS = {  # Flex CashTransaction type -> Activity Statement section
 }
 
 
-def to_statement_rows(xml_text: str) -> list[list[str]]:
+def _confirm_indicator(code: str) -> str:
+    """Trade confirmations carry O / C in their code instead of openCloseIndicator."""
+    codes = set(code.split(";"))
+    return "C;O" if {"C", "O"} <= codes else "C" if "C" in codes else "O" if "O" in codes else ""
+
+
+def todays_trades(today_xml: str, after: str, known_ids: set[str]) -> list[ET.Element]:
+    """Executions from a Trade Confirmation query, as Activity-style <Trade> elements.
+
+    Only trade dates after the activity statement's last day are taken (the activity
+    statement is authoritative for anything it covers); ids already seen are skipped."""
+    st = ET.fromstring(today_xml).find(".//FlexStatement")
+    if st is None:
+        return []
+    out = []
+    for c in st.iter("TradeConfirm"):
+        if _attr(c, "levelOfDetail", default="EXECUTION").upper() != "EXECUTION":
+            continue
+        if _attr(c, "tradeDate") <= after or (_attr(c, "tradeID") and _attr(c, "tradeID") in known_ids):
+            continue
+        a = dict(c.attrib)
+        a.update({
+            "tradePrice": _attr(c, "price", "tradePrice"),
+            "ibCommission": repr(_num(_attr(c, "commission", "ibCommission")) + _num(_attr(c, "tax"))),
+            "ibCommissionCurrency": _attr(c, "commissionCurrency", "ibCommissionCurrency"),
+            "notes": _attr(c, "code", "notes"),
+            "openCloseIndicator": _confirm_indicator(_attr(c, "code")),
+            "fifoPnlRealized": "0", "cost": "0", "taxes": "0",  # IBKR fills these in overnight
+        })
+        out.append(ET.Element("Trade", a))
+    return _net_cancelled(out)
+
+
+def to_statement_rows(xml_text: str, today_xml: str | None = None) -> list[list[str]]:
+    """Activity Flex XML (+ optionally today's Trade Confirmation XML) -> statement rows."""
     root = ET.fromstring(xml_text)
     st = root.find(".//FlexStatement")
     if st is None:
@@ -173,6 +207,8 @@ def to_statement_rows(xml_text: str) -> list[list[str]]:
     # trades: one row per execution; cancelled/re-booked trades netted (see _net_cancelled)
     trades = _net_cancelled([t for t in st.iter("Trade")
                              if _attr(t, "levelOfDetail", default="EXECUTION").upper() == "EXECUTION"])
+    today = todays_trades(today_xml, _attr(st, "toDate"), {_attr(t, "tradeID") for t in trades}) if today_xml else []
+    trades += today
 
     # Fills in the same second are processed in the order IBKR applied them: the piece that
     # closes a position before the piece that opens one ("C", then "C;O", then "O").
@@ -218,12 +254,19 @@ def to_statement_rows(xml_text: str) -> list[list[str]]:
     # open positions
     w(["Open Positions", "Header", "DataDiscriminator", "Asset Category", "Currency", "Symbol", "Quantity", "Mult",
        "Cost Price", "Cost Basis", "Close Price", "Value", "Unrealized P/L", "Code"])
+    # positions as of the activity statement, rolled forward with today's executions;
+    # anything traded today is marked at its latest trade price (live quotes can refine it)
+    held: dict[str, list] = {}
     for p in st.iter("OpenPosition"):
-        if _attr(p, "assetCategory", "assetClass") != "STK":
-            continue
-        w(["Open Positions", "Data", "Summary", "Stocks", _attr(p, "currency"), _attr(p, "symbol"),
-           _attr(p, "position"), "1", _attr(p, "costBasisPrice"), _attr(p, "costBasisMoney"),
-           _attr(p, "markPrice"), _attr(p, "positionValue"), _attr(p, "fifoPnlUnrealized"), ""])
+        if _attr(p, "assetCategory", "assetClass") == "STK":
+            held[_attr(p, "symbol")] = [_attr(p, "currency"), _num(_attr(p, "position")), _attr(p, "markPrice")]
+    for t in sorted((t for t in today if _attr(t, "assetCategory") == "STK"), key=lambda t: _dt(_attr(t, "dateTime"))):
+        row = held.setdefault(_attr(t, "symbol"), [_attr(t, "currency"), 0.0, ""])
+        row[1] += _num(_attr(t, "quantity"))
+        row[2] = _attr(t, "tradePrice")
+    for sym, (ccy, qty, mark) in held.items():
+        if abs(qty) > 1e-9:
+            w(["Open Positions", "Data", "Summary", "Stocks", ccy, sym, repr(qty), "1", "", "", mark, "", "", ""])
 
     # closing exchange rates (to base) for end valuation
     latest: dict[str, tuple[str, float]] = {}
@@ -253,9 +296,9 @@ def to_statement_rows(xml_text: str) -> list[list[str]]:
     return rows
 
 
-def save_statement(xml_text: str, path: Path) -> Path:
+def save_statement(xml_text: str, path: Path, today_xml: str | None = None) -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
     buf = io.StringIO()
-    csv.writer(buf).writerows(to_statement_rows(xml_text))
+    csv.writer(buf).writerows(to_statement_rows(xml_text, today_xml))
     path.write_text(buf.getvalue(), encoding="utf-8")
     return path

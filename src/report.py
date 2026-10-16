@@ -40,8 +40,11 @@ class Report:
         return abs(self.total_pl - (self.nav_end - self.net_deposits)) < 0.05
 
 
-def build(statement, method: str | None = None, fx_source: str = "ecb") -> Report:
-    """fx_source: "ecb" (any base currency) or "rba" (AUD base only)."""
+def build(statement, method: str | None = None, fx_source: str = "ecb",
+          price_override: dict | None = None, fx_override: dict | None = None) -> Report:
+    """fx_source: "ecb" (any base currency) or "rba" (AUD base only).
+    price_override / fx_override: latest prices and exchange rates (base units per 1 unit)
+    replacing the statement's closing marks, so positions and cash are valued as of now."""
     trades = ingest.load_trades(statement)
     sections = ingest.read_sections(statement)
     account = ingest.account_info(statement)
@@ -50,17 +53,21 @@ def build(statement, method: str | None = None, fx_source: str = "ecb") -> Repor
         fx_source = "ecb"
     rates = fx.build_rates(trades, base, fx_source)
     end_rates = ledger.end_rates_from_statement(statement, base)
+    end_rates.update(fx_override or {})
     end = trades["time"].max().normalize()
     rate_end = lambda ccy: end_rates.get(ccy) or rates(ccy, end)
 
     stock_trades = ingest.load_stock_trades(statement)
     ins = market.instruments(sections)
-    if method is None and stock_trades["lot_method"].isna().all():
-        method = cb.infer_lot_method(stock_trades)  # statement without per-trade election codes
-    positions, sells = cb.run(stock_trades, method=method, fx=rates)
+    # trades without an election code (e.g. today's, not yet processed by IBKR) use the
+    # account's usual method; with no codes at all, infer it from IBKR's realized P/L
+    recorded = stock_trades["lot_method"].dropna()
+    usual = recorded.mode().iloc[0] if not recorded.empty else (cb.infer_lot_method(stock_trades) or "FIFO")
+    positions, sells = cb.run(stock_trades, method=method, fx=rates, default_method=usual)
     cycles, t_rounds = rounds.cycles_and_rounds(stock_trades, fx=rates)
     op = sections.get("Open Positions", pd.DataFrame(columns=["Symbol", "Close Price"]))
     prices = dict(zip(op["Symbol"], ingest._num(op["Close Price"])))
+    prices.update(price_override or {})
     decomp = returns.decompose_open(cb.open_lots(positions), prices, rate_end)
 
     flows = ledger.cash_flows(statement, base)

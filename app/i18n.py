@@ -8,7 +8,10 @@ SYMBOLS = {"AUD": "A$", "USD": "US$", "EUR": "€", "GBP": "£", "JPY": "¥", "C
 EN = {
     # app chrome
     "lang": "Language",
-    "sync_title": "🔄 IBKR auto-sync", "sync_button": "Sync now",
+    "sync_title": "🔄 IBKR auto-sync", "sync_button": "🔄 Refresh",
+    "sync_today": "Fetching today's trades…",
+    "sync_no_today": "Add IBKR_FLEX_TODAY_QUERY_ID (a Trade Confirmation query) to include today's trades.",
+    "live_prices": "Positions valued at latest prices ({when}, Yahoo, may be ~15 min delayed)",
     "sync_running": "Asking IBKR for your latest statement…",
     "sync_waiting": "IBKR is still preparing the statement… ({n})",
     "sync_done": "Synced — showing your latest trades.", "sync_failed": "Sync failed ({err}). Showing the last saved data.",
@@ -255,7 +258,10 @@ EN = {
 
 ZH = {
     "lang": "语言",
-    "sync_title": "🔄 IBKR 自动同步", "sync_button": "立即同步",
+    "sync_title": "🔄 IBKR 自动同步", "sync_button": "🔄 刷新",
+    "sync_today": "正在获取今天的成交…",
+    "sync_no_today": "配置 IBKR_FLEX_TODAY_QUERY_ID（成交确认查询）后可显示当天交易。",
+    "live_prices": "持仓按最新价格估值（{when}，Yahoo，约 15 分钟延迟）",
     "sync_running": "正在向 IBKR 请求最新对账单…",
     "sync_waiting": "IBKR 还在生成对账单…（{n}）",
     "sync_done": "同步完成，显示的是最新交易。", "sync_failed": "同步失败（{err}），先显示上次保存的数据。",
