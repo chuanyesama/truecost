@@ -51,14 +51,12 @@ def cash_flows(path, base: str) -> pd.DataFrame:
         if asset == "Forex":
             bought = sym.split(".")[0]
             flows += [(when, bought, qty, "fx"), (when, ccy, proceeds, "fx"), (when, base, comm_base, "fee")]
-        else:
-            flows.append((when, ccy, proceeds + comm, "trade"))
 
-    ca = sec.get("Commission Adjustments")
-    if ca is not None:
-        ca = ca[ca["Currency"].str.len() == 3]
-        for ccy, d, amt in zip(ca["Currency"], ca["Date"], num(ca["Amount"])):
-            flows.append((pd.Timestamp(d), ccy, amt, "trade"))
+    # stock trades with post-trade commission adjustments folded into the trade they
+    # belong to - the same table the P/L side uses, so both convert at the same rate
+    stocks = ingest.load_stock_trades(path)
+    for when, ccy, cash in zip(stocks["time"], stocks["currency"], stocks["proceeds"] + stocks["commission"]):
+        flows.append((when, ccy, cash, "trade"))
 
     dw = sec.get("Deposits & Withdrawals")
     if dw is not None:

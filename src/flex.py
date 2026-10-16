@@ -100,6 +100,48 @@ def _date(s: str) -> str:
     return _dt(s).split(",")[0]
 
 
+ADDITIVE = ("quantity", "proceeds", "ibCommission", "taxes", "cost", "fifoPnlRealized", "mtmPnl", "netCash")
+
+
+def _net_cancelled(trades: list[ET.Element]) -> list[ET.Element]:
+    """Merge every row of a cancelled trade into one net row.
+
+    IBKR records a correction as the original fill, a "TradeCancel" row reversing it and
+    sometimes a re-booked copy, splitting commission and realized P/L between rows in
+    different ways. Quantities, cash, commission, cost and realized P/L are additive, so
+    summing all rows that share the cancelled trade id (and symbol) always gives the
+    trade that actually stands - or nothing, when it was simply cancelled. Ids are only
+    grouped when a cancel points at them: an auto FX conversion can share an id with an
+    ordinary trade."""
+    is_cancel = lambda t: _attr(t, "transactionType") == "TradeCancel" or "Ca" in _attr(t, "notes").split(";")
+    groups = {(_attr(c, "origTradeID"), _attr(c, "symbol")) for c in trades if is_cancel(c)}
+    key = lambda t: (_attr(t, "origTradeID") if is_cancel(t) else _attr(t, "tradeID"), _attr(t, "symbol"))
+    members: dict[tuple, list[ET.Element]] = {}
+    out = []
+    for t in trades:
+        k = key(t)
+        if k in groups:
+            members.setdefault(k, []).append(t)
+        else:
+            out.append(t)
+    for rows in members.values():
+        net_qty = sum(_num(_attr(r, "quantity")) for r in rows)
+        if abs(net_qty) < 1e-9:
+            continue  # cancelled outright
+        kept = [r for r in rows if not is_cancel(r)] or rows
+        lead = max(kept, key=lambda r: abs(_num(_attr(r, "fifoPnlRealized"))))
+        merged = ET.Element("Trade", dict(lead.attrib))
+        for f in ADDITIVE:
+            merged.set(f, repr(sum(_num(_attr(r, f)) for r in rows)))
+        proceeds = sum(_num(_attr(r, "proceeds")) for r in rows)
+        merged.set("tradePrice", repr(abs(proceeds / net_qty)))
+        codes = [c for r in kept for c in _attr(r, "notes").split(";") if c and c != "Ca"]
+        merged.set("notes", ";".join(dict.fromkeys(codes)))
+        merged.set("transactionType", "ExchTrade")
+        out.append(merged)
+    return out
+
+
 CASH_SECTIONS = {  # Flex CashTransaction type -> Activity Statement section
     "deposits/withdrawals": "Deposits & Withdrawals", "deposits & withdrawals": "Deposits & Withdrawals",
     "dividends": "Dividends", "payment in lieu of dividends": "Dividends",
@@ -128,8 +170,15 @@ def to_statement_rows(xml_text: str) -> list[list[str]]:
     w(["Account Information", "Header", "Field Name", "Field Value"])
     w(["Account Information", "Data", "Base Currency", base])
 
-    # trades: one row per execution
-    trades = [t for t in st.iter("Trade") if _attr(t, "levelOfDetail", default="EXECUTION").upper() == "EXECUTION"]
+    # trades: one row per execution; cancelled/re-booked trades netted (see _net_cancelled)
+    trades = _net_cancelled([t for t in st.iter("Trade")
+                             if _attr(t, "levelOfDetail", default="EXECUTION").upper() == "EXECUTION"])
+
+    # Fills in the same second are processed in the order IBKR applied them: the piece that
+    # closes a position before the piece that opens one ("C", then "C;O", then "O").
+    rank = {"C": 0, "C;O": 1, "O": 2}
+    trades.sort(key=lambda t: (_dt(_attr(t, "dateTime", "tradeDate")), _attr(t, "symbol"),
+                               rank.get(_attr(t, "openCloseIndicator"), 1)))
     stocks = [t for t in trades if _attr(t, "assetCategory", "assetClass") == "STK"]
     forex = [t for t in trades if _attr(t, "assetCategory", "assetClass") == "CASH"]
     w(["Trades", "Header", "DataDiscriminator", "Asset Category", "Currency", "Symbol", "Date/Time", "Quantity",
@@ -138,7 +187,7 @@ def to_statement_rows(xml_text: str) -> list[list[str]]:
         comm = _num(_attr(t, "ibCommission", "commission")) + _num(_attr(t, "taxes"))
         w(["Trades", "Data", "Order", "Stocks", _attr(t, "currency"), _attr(t, "symbol"),
            _dt(_attr(t, "dateTime", "tradeDate")), _attr(t, "quantity"), _attr(t, "tradePrice"),
-           _attr(t, "closePrice"), _attr(t, "proceeds"), str(comm), _attr(t, "costBasis", default="0"),
+           _attr(t, "closePrice"), _attr(t, "proceeds"), str(comm), _attr(t, "costBasis", "cost", default="0"),
            _attr(t, "fifoPnlRealized", default="0"), _attr(t, "mtmPnl", default="0"),
            _attr(t, "notes", "code").replace(" ", "")])
     w(["Trades", "Header", "DataDiscriminator", "Asset Category", "Currency", "Symbol", "Date/Time", "Quantity",
