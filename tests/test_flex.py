@@ -112,3 +112,39 @@ def test_plain_cancel_removes_trade_but_not_a_conversion_sharing_its_id():
     ]
     out = flex._net_cancelled(rows)
     assert [t.get("symbol") for t in out] == ["USD.TWD"]
+
+
+TODAY_XML = """<FlexQueryResponse><FlexStatements count="1">
+<FlexStatement fromDate="20261001" toDate="20261001" period="Today">
+  <TradeConfirms>
+    <TradeConfirm assetCategory="STK" symbol="MDB" currency="USD" listingExchange="NASDAQ" tradeDate="20260930"
+                  dateTime="20261001;010000" quantity="-1" price="999" proceeds="999" commission="-1"
+                  code="C" tradeID="old" levelOfDetail="EXECUTION"/>
+    <TradeConfirm assetCategory="STK" symbol="MDB" currency="USD" listingExchange="NASDAQ" tradeDate="20261001"
+                  dateTime="20261001;233000" quantity="-5" price="330" proceeds="1650" commission="-1"
+                  commissionCurrency="USD" code="C" tradeID="t1" levelOfDetail="EXECUTION"/>
+    <TradeConfirm assetCategory="STK" symbol="NVDA" currency="USD" listingExchange="NASDAQ" tradeDate="20261001"
+                  dateTime="20261001;233500" quantity="4" price="180" proceeds="-720" commission="-1"
+                  commissionCurrency="USD" code="O" tradeID="t2" levelOfDetail="EXECUTION"/>
+  </TradeConfirms>
+</FlexStatement></FlexStatements></FlexQueryResponse>"""
+
+
+def test_todays_trades_are_merged_after_the_statement(tmp_path):
+    path = flex.save_statement(FLEX_XML, tmp_path / "merged.csv", TODAY_XML)
+    t = ingest.load_stock_trades(path)
+    assert len(t) == 3 + 2  # the trade dated within the statement period ("old") is ignored
+    r = report.build(path, fx_source="ecb")
+    h = r.holdings.set_index("symbol")
+    assert h.loc["MDB", "shares"] == 5 and h.loc["NVDA", "shares"] == 4  # rolled forward, new symbol added
+    assert r.reconciles
+    # today's sell carries no lot code: it uses the account's usual method like the rest
+    assert r.sells.iloc[-1]["method"] in ("LIFO", "FIFO")
+
+
+def test_live_prices_and_fx_override_the_marks(tmp_path):
+    path = flex.save_statement(FLEX_XML, tmp_path / "s.csv")
+    base = report.build(path, fx_source="ecb")
+    live = report.build(path, fx_source="ecb", price_override={"MDB": 400.0}, fx_override={"USD": 1.60})
+    assert live.prices["MDB"] == 400.0
+    assert live.nav_end > base.nav_end and live.reconciles
