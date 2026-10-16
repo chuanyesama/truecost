@@ -217,23 +217,36 @@ if up is not None:
                          trades=analytics.trades_bucket(len(r.stock_trades)), reconciles=bool(r.reconciles))
 
 # ---------- paid report (demand test), feedback, privacy ----------
-REPORT_PRICE = {"AUD": 19, "USD": 12, "EUR": 11, "GBP": 10, "NZD": 21, "CAD": 17, "SGD": 16, "HKD": 95}
+# prices shown in the viewer's currency (rounded local equivalents of the AUD price)
+PRICES = {
+    "report": {"AUD": 19, "USD": 12, "EUR": 11, "GBP": 10, "NZD": 21, "CAD": 17, "SGD": 16, "HKD": 95},
+    "pro_month": {"AUD": 9, "USD": 6, "EUR": 5.5, "GBP": 4.9, "NZD": 10, "CAD": 8, "SGD": 8, "HKD": 45},
+    "pro_year": {"AUD": 79, "USD": 52, "EUR": 48, "GBP": 42, "NZD": 87, "CAD": 72, "SGD": 70, "HKD": 400},
+}
 
 
-def report_offer(where: str) -> None:
-    price = money(REPORT_PRICE.get(B, 12), B if B in REPORT_PRICE else "USD", sign=False)
-    st.markdown(f"##### 📄 {t('offer_title')}")
-    st.caption(t("offer_body"))
-    if st.button(t("offer_button", price=price), key=f"offer_{where}", type="primary"):
-        st.session_state.offer_open = True
-        analytics.track("paid_report_click", where=where, base=B, demo=demo, price=price)
-    if st.session_state.get("offer_open"):
+def price_of(item: str) -> str:
+    table = PRICES[item]
+    ccy = B if B in table else "USD"
+    v = table[ccy]
+    return money(v, ccy, sign=False, decimals=0 if float(v).is_integer() else 2)
+
+
+def offer(kind: str, where: str) -> None:
+    """Demand test: a priced button, then an optional email for the waitlist."""
+    price = price_of("report" if kind == "report" else "pro_month")
+    if st.button(t(f"{kind}_button", price=price, year=price_of("pro_year")), key=f"{kind}_{where}",
+                 type="primary" if kind == "pro" else "secondary", width="stretch"):
+        st.session_state[f"{kind}_open"] = True
+        analytics.track("paid_report_click" if kind == "report" else "pro_click",
+                        where=where, base=B, demo=demo, price=price)
+    if st.session_state.get(f"{kind}_open"):
         st.info(t("offer_soon"))
-        with st.form(f"waitlist_{where}", clear_on_submit=True):
+        with st.form(f"waitlist_{kind}_{where}", clear_on_submit=True):
             email = st.text_input(t("offer_email"), placeholder="you@example.com")
             if st.form_submit_button(t("offer_notify")):
                 if "@" in email and "." in email.split("@")[-1]:
-                    analytics.track("waitlist_signup", where=where, base=B, email=email.strip())
+                    analytics.track("waitlist_signup", product=kind, where=where, base=B, email=email.strip())
                     st.success(t("offer_thanks"))
                 else:
                     st.warning(t("offer_bad_email"))
@@ -241,7 +254,15 @@ def report_offer(where: str) -> None:
 
 with st.sidebar:
     st.divider()
-    report_offer("sidebar")
+    st.markdown(f"##### ⭐ {t('pro_title')}")
+    st.caption(t("pro_pitch"))
+    offer("pro", "sidebar")
+    with st.expander(t("plans_title")):
+        st.markdown(md(t("plans_table", month=price_of("pro_month"), year=price_of("pro_year"),
+                         report=price_of("report"))))
+    st.markdown(f"##### 📄 {t('offer_title')}")
+    st.caption(t("offer_body"))
+    offer("report", "sidebar")
     with st.expander(t("feedback_title")):
         with st.form("feedback", clear_on_submit=True):
             text = st.text_area(t("feedback_label"), max_chars=1000)

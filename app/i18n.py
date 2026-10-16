@@ -19,7 +19,21 @@ EN = {
     "offer_body": "Your year in one PDF: P/L in your home currency split into trading vs currency, every closed "
                   "trade with cost and proceeds at each day's rate, fees and round-trip results — ready to keep or "
                   "hand to your accountant.",
-    "offer_button": "Get the report — {price}",
+    "report_button": "Get the report — {price}",
+    "pro_title": "TrueCost Pro",
+    "pro_pitch": "Open the site and see today's trades and positions — synced from IBKR, one click to refresh. "
+                 "Plus multi-year history, intraday charts and AI.",
+    "pro_button": "Join Pro — {price}/month",
+    "plans_title": "Free vs Pro",
+    "plans_table": "| | Free | Pro |\n|---|---|---|\n"
+                   "| Getting your data | Download CSV & upload | **Auto-sync, today's trades, one-click refresh** |\n"
+                   "| Account | None, nothing stored | Sign in; encrypted IBKR token |\n"
+                   "| P/L split, real cost, round trips, fees, style | ✅ | ✅ |\n"
+                   "| Chart with your trades | Daily & weekly | + intraday (2H–1M) |\n"
+                   "| History | One statement at a time | Multi-year, merged |\n"
+                   "| AI: ask your account, monthly review | — | ✅ |\n"
+                   "| Annual report (PDF) | {report} each | Included |\n\n"
+                   "**Pro: {month}/month or {year}/year.**",
     "offer_soon": "Coming soon! Leave your email and we'll tell you when it's ready (and give you an early-bird price).",
     "offer_email": "Email (optional)", "offer_notify": "Notify me",
     "offer_thanks": "Thanks — you're on the list.", "offer_bad_email": "That email doesn't look right.",
@@ -251,7 +265,20 @@ ZH = {
     "offer_title": "年度报告（PDF）",
     "offer_body": "把你一整年浓缩成一份 PDF：按本币计算的盈亏（交易 vs 汇率）、每笔平仓按当日汇率折算的成本和收入、"
                   "费用和做 T 成绩——方便自己留存，也可以直接交给会计师。",
-    "offer_button": "获取报告 — {price}",
+    "report_button": "获取报告 — {price}",
+    "pro_title": "TrueCost 专业版",
+    "pro_pitch": "打开网站就能看到今天的交易和持仓——自动从 IBKR 同步，点一下就刷新。另有多年历史合并、分钟级 K 线和 AI 分析。",
+    "pro_button": "加入专业版 — {price}/月",
+    "plans_title": "免费版 vs 专业版",
+    "plans_table": "| | 免费版 | 专业版 |\n|---|---|---|\n"
+                   "| 数据导入 | 自己下载 CSV 上传 | **自动同步、当天交易、一键刷新** |\n"
+                   "| 账户 | 不用注册，不保存数据 | 登录；IBKR token 加密保存 |\n"
+                   "| 盈亏拆解、真实成本、做T、费用、交易风格 | ✅ | ✅ |\n"
+                   "| K线图 + 买卖点 | 日线、周线 | + 分钟级（2H–1M） |\n"
+                   "| 历史范围 | 一次一份对账单 | 多年自动合并 |\n"
+                   "| AI：问你的账户、每月复盘 | — | ✅ |\n"
+                   "| 年度报告 PDF | 每份 {report} | 包含 |\n\n"
+                   "**专业版：{month}/月，或 {year}/年。**",
     "offer_soon": "即将推出！留下邮箱，上线时第一时间通知你（并享受早鸟价）。",
     "offer_email": "邮箱（选填）", "offer_notify": "通知我",
     "offer_thanks": "谢谢，已登记！", "offer_bad_email": "邮箱格式好像不对。",
