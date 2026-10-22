@@ -8,6 +8,68 @@ SYMBOLS = {"AUD": "A$", "USD": "US$", "EUR": "€", "GBP": "£", "JPY": "¥", "C
 EN = {
     # app chrome
     "lang": "Language",
+    "tab_guide": "👋 Get started",
+    "guide_title": "Get started in 3 minutes",
+    "guide_intro": "Your broker shows each currency separately and your *average* cost. TrueCost puts everything in "
+                   "**your home currency** and answers questions your broker's screens don't:\n\n"
+                   "- **Did I make money from trading, or did the exchange rate do it?**\n"
+                   "- **What is my real cost after trading around a position (selling and buying back)?**\n"
+                   "- **How much am I paying in fees — and how could I pay less?**\n\n"
+                   "The numbers you see now come from a **sample account**. Follow the steps below to see your own.",
+    "guide_s1": "Step 1 · Download your statement from IBKR",
+    "guide_s1_body": "1. Log in to the **IBKR Portal** in a web browser (not the mobile app).\n"
+                     "2. Top menu: **Performance & Reports → Statements**.\n"
+                     "3. Find **Activity** under *Default Statements* and click the **→** arrow on its row.\n"
+                     "4. In the window that opens:\n"
+                     "   - **Period**: *Annual* for a past year, or *Year to Date* for this year\n"
+                     "   - **Format**: **CSV**\n"
+                     "   - **Language**: **English**\n"
+                     "5. Click **Run / Download**. A file like `U1234567_20260101_20261009.csv` is saved.",
+    "guide_s1_mistakes": "Common mistakes",
+    "guide_s1_mistakes_body": "- **PDF or HTML instead of CSV** — TrueCost needs the CSV.\n"
+                              "- **Language not English** — column names change and the file can't be read.\n"
+                              "- **A Flex Query, Trade Confirmation or Tax report** — use the plain **Activity** statement.\n"
+                              "- **Opened your account years ago?** Upload one year at a time for now "
+                              "(Pro will merge multiple years automatically).",
+    "guide_s2": "Step 2 · Upload it",
+    "guide_s2_body": "Drag the file into **IBKR Activity Statement (CSV)** in the left sidebar "
+                     "(on a phone, tap **»** at the top-left to open it). Results appear in a few seconds.\n\n"
+                     "🔒 Your statement is processed for this visit only: the temporary file is deleted right after "
+                     "parsing, nothing is stored, and no amounts, symbols or account numbers are ever sent anywhere.",
+    "guide_s3": "Step 3 · Read your results",
+    "guide_s3_table": "| Tab | The question it answers |\n|---|---|\n"
+                      "| **Overview** | How much did I make in total, and how much came from trading vs currency? |\n"
+                      "| **Real cost** | What did each position really cost after my round trips? Any zero-cost holdings? |\n"
+                      "| **Chart** | Where exactly did I buy and sell on the price chart? |\n"
+                      "| **Round trips** | Does trading around a core position actually make me money? |\n"
+                      "| **Fees** | How much have commissions cost me, and how could I pay less? |\n"
+                      "| **Trading style** | What kind of trader am I, and what do my habits cost me? |\n"
+                      "| **Currency** | How much did exchange rates add to or take from my shares and cash? |\n"
+                      "| **Trades** | Every closing trade, downloadable as CSV. |\n\n"
+                      "Every page is checked against your account: the green ✅ bar at the top means TrueCost's "
+                      "breakdown adds up exactly to *ending NAV − net deposits*.",
+    "guide_s4": "Step 4 · Free or Pro?",
+    "guide_s4_body": "Everything above is **free**. **Pro** is for active traders who don't want to download a file "
+                     "every time:",
+    "guide_faq": "Questions",
+    "faq_safe_q": "Is it safe to upload my statement?",
+    "faq_safe_a": "The free version never stores your file: it's parsed in memory for your visit and the temporary "
+                  "copy is deleted immediately. Anonymous usage counts (e.g. \"a statement was uploaded\") never "
+                  "include amounts, symbols or account numbers. You can also run TrueCost on your own computer — the "
+                  "code is open source on GitHub.",
+    "faq_diff_q": "Why don't my numbers match the IBKR app exactly?",
+    "faq_diff_a": "IBKR shows profit in each stock's own currency and an average cost that ignores profits from "
+                  "selling and buying back. TrueCost converts every trade at that day's exchange rate into your home "
+                  "currency and also shows the *diluted* cost. The account total is the same — the green ✅ bar checks "
+                  "it against ending NAV − net deposits.",
+    "faq_brokers_q": "Which brokers and currencies are supported?",
+    "faq_brokers_a": "Interactive Brokers, any base currency (AUD, USD, EUR, GBP, …), stocks and ETFs in US, European, "
+                     "Nordic and Asian markets. Options, futures and other brokers are not supported yet.",
+    "faq_advice_q": "Is this tax or investment advice?",
+    "faq_advice_a": "No. TrueCost is a calculator for self-review. For your tax return, check the numbers with a "
+                    "registered tax agent.",
+    "guide_pointer": "New here? Open **👋 Get started** for step-by-step instructions.",
+    "plans_pointer": "Free vs Pro: see **👋 Get started**, step 4.",
     "sync_title": "🔄 IBKR auto-sync", "sync_button": "🔄 Refresh",
     "sync_today": "Fetching today's trades…",
     "sync_no_today": "Add IBKR_FLEX_TODAY_QUERY_ID (a Trade Confirmation query) to include today's trades.",
@@ -258,6 +320,62 @@ EN = {
 
 ZH = {
     "lang": "语言",
+    "tab_guide": "👋 新手教程",
+    "guide_title": "3 分钟上手",
+    "guide_intro": "券商按币种分开显示盈亏，显示的也只是*平均*成本。TrueCost 把所有东西换算成**你的本币**，"
+                   "回答券商页面回答不了的问题：\n\n"
+                   "- **我赚的钱，是交易赚的，还是汇率给的？**\n"
+                   "- **做 T（卖出再买回）之后，我的真实成本是多少？**\n"
+                   "- **我付了多少佣金和费用——怎样能少付一点？**\n\n"
+                   "现在看到的数字来自**示例账户**。按下面的步骤，就能看到你自己的。",
+    "guide_s1": "第 1 步 · 从 IBKR 下载对账单",
+    "guide_s1_body": "1. 用**电脑浏览器**登录 IBKR 网页版（不是手机 App）。\n"
+                     "2. 顶部菜单：**业绩与报告 → 报表**（英文界面是 Performance & Reports → Statements）。\n"
+                     "3. 在「默认报表」里找到 **活动（Activity）**，点这一行右边的 **→** 箭头。\n"
+                     "4. 在弹出的窗口里：\n"
+                     "   - **期间**：过去的年份选*年度*，今年选*年初至今*\n"
+                     "   - **格式**：**CSV**\n"
+                     "   - **语言**：**English**（必须是英文）\n"
+                     "5. 点**运行 / 下载**，会得到一个类似 `U1234567_20260101_20261009.csv` 的文件。",
+    "guide_s1_mistakes": "常见错误",
+    "guide_s1_mistakes_body": "- **下载成了 PDF 或 HTML**——TrueCost 需要的是 CSV。\n"
+                              "- **语言选了中文**——列名会变，文件读不了。\n"
+                              "- **用了自主查询（Flex）、成交确认或税务报表**——请用普通的**活动**对账单。\n"
+                              "- **开户好几年了？** 目前请一次上传一年（专业版会自动合并多年数据）。",
+    "guide_s2": "第 2 步 · 上传",
+    "guide_s2_body": "把文件拖到左侧边栏的 **IBKR 活动对账单（CSV）** 框里"
+                     "（手机上点左上角 **»** 打开侧边栏），几秒钟就出结果。\n\n"
+                     "🔒 对账单只在本次访问中处理：解析完立即删除临时文件，不保存任何内容，"
+                     "也不会把金额、股票代码或账户号码发到任何地方。",
+    "guide_s3": "第 3 步 · 看懂结果",
+    "guide_s3_table": "| 页面 | 回答什么问题 |\n|---|---|\n"
+                      "| **总览** | 我一共赚了多少？其中交易赚的和汇率给的各是多少？ |\n"
+                      "| **真实成本** | 做 T 之后，每只股票真实成本是多少？有没有零成本持股？ |\n"
+                      "| **K线图** | 我在哪个价位、哪个时间买的卖的？ |\n"
+                      "| **做T记录** | 在底仓上做差价，到底有没有赚钱？ |\n"
+                      "| **费用** | 佣金花了多少？怎样能少付？ |\n"
+                      "| **交易风格** | 我是哪种交易者？哪些习惯在花我的钱？ |\n"
+                      "| **汇率拆解** | 汇率给我的股票和现金加了多少、减了多少？ |\n"
+                      "| **交易明细** | 每一笔平仓，可下载 CSV。 |\n\n"
+                      "每个页面都和你的账户对过账：顶部的绿色 ✅ 表示 TrueCost 的拆分加起来"
+                      "正好等于「期末净值 − 净入金」。",
+    "guide_s4": "第 4 步 · 免费版还是专业版？",
+    "guide_s4_body": "上面所有分析都是**免费**的。**专业版**适合不想每次都手动下载文件的活跃交易者：",
+    "guide_faq": "常见问题",
+    "faq_safe_q": "上传对账单安全吗？",
+    "faq_safe_a": "免费版从不保存你的文件：只在本次访问的内存里解析，临时文件立即删除。匿名统计"
+                  "（比如「有人上传了对账单」）从不包含金额、股票代码或账户号码。你也可以在自己电脑上运行 TrueCost——"
+                  "代码在 GitHub 上开源。",
+    "faq_diff_q": "为什么和 IBKR App 里的数字不完全一样？",
+    "faq_diff_a": "IBKR 按每只股票自己的币种显示盈亏，显示的平均成本也不含做 T 的盈亏。TrueCost 把每笔交易按当天汇率"
+                  "换算成你的本币，并给出摊薄成本。账户总额是一样的——顶部绿色 ✅ 会用「期末净值 − 净入金」核对。",
+    "faq_brokers_q": "支持哪些券商和币种？",
+    "faq_brokers_a": "盈透证券（IBKR），任何基础货币（AUD、USD、EUR、GBP……），美股、欧股、北欧和亚洲市场的股票和 ETF。"
+                     "暂不支持期权、期货和其他券商。",
+    "faq_advice_q": "这算税务或投资建议吗？",
+    "faq_advice_a": "不算。TrueCost 是帮你复盘的计算工具。报税时请让注册税务师核对数字。",
+    "guide_pointer": "第一次用？打开 **👋 新手教程** 看详细步骤。",
+    "plans_pointer": "免费版和专业版的区别：见 **👋 新手教程** 第 4 步。",
     "sync_title": "🔄 IBKR 自动同步", "sync_button": "🔄 刷新",
     "sync_today": "正在获取今天的成交…",
     "sync_no_today": "配置 IBKR_FLEX_TODAY_QUERY_ID（成交确认查询）后可显示当天交易。",

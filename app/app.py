@@ -86,7 +86,13 @@ METHODS = {"lot_ibkr": None, "lot_fifo": "FIFO", "lot_lifo": "LIFO", "lot_hifo":
 
 st.set_page_config(page_title="TrueCost", page_icon="💱", layout="wide")
 # larger base text in both light and dark themes (Streamlit sizes everything in rem)
-st.markdown("<style>html { font-size: 18px; }</style>", unsafe_allow_html=True)
+st.markdown("""<style>
+  html { font-size: 18px; }
+  /* wider sidebar (desktop); Streamlit keeps it as an overlay on phones */
+  @media (min-width: 900px) {
+    section[data-testid="stSidebar"] { width: 360px !important; min-width: 360px !important; }
+  }
+</style>""", unsafe_allow_html=True)
 if (st.context.theme.type or "light") == "light":
     # Streamlit's light warning box is pale yellow text on pale yellow; darken it
     st.markdown("""<style>
@@ -203,8 +209,7 @@ with st.sidebar:
         set_theme("Light" if dark else "Dark")
     st.header(t("upload_header"))
     up = st.file_uploader(t("upload_label"), type="csv")
-    with st.expander(t("how_to")):
-        st.markdown(t("how_to_steps"))
+    st.caption(t("guide_pointer"))
     method_key = st.selectbox(t("lot_method"), list(METHODS), format_func=t, help=t("lot_method_help"))
 
 def sync_now(token: str, query: str, today_query: str | None) -> None:
@@ -306,10 +311,10 @@ def offer(kind: str, where: str) -> None:
     price = price_of("report" if kind == "report" else "pro_month")
     if st.button(t(f"{kind}_button", price=price, year=price_of("pro_year")), key=f"{kind}_{where}",
                  type="primary" if kind == "pro" else "secondary", width="stretch"):
-        st.session_state[f"{kind}_open"] = True
+        st.session_state[f"{kind}_{where}_open"] = True
         analytics.track("paid_report_click" if kind == "report" else "pro_click",
                         where=where, base=B, demo=demo, price=price)
-    if st.session_state.get(f"{kind}_open"):
+    if st.session_state.get(f"{kind}_{where}_open"):
         st.info(t("offer_soon"))
         with st.form(f"waitlist_{kind}_{where}", clear_on_submit=True):
             email = st.text_input(t("offer_email"), placeholder="you@example.com")
@@ -326,9 +331,7 @@ with st.sidebar:
     st.markdown(f"##### ⭐ {t('pro_title')}")
     st.caption(t("pro_pitch"))
     offer("pro", "sidebar")
-    with st.expander(t("plans_title")):
-        st.markdown(md(t("plans_table", month=price_of("pro_month"), year=price_of("pro_year"),
-                         report=price_of("report"))))
+    st.caption(t("plans_pointer"))
     st.markdown(f"##### 📄 {t('offer_title')}")
     st.caption(t("offer_body"))
     offer("report", "sidebar")
@@ -358,13 +361,40 @@ if r.reconciles:
 else:
     st.error(md(t("not_reconciled", diff=m_(r.total_pl - (r.nav_end - r.net_deposits)))))
 
-tab_names = t("tabs")
+tab_names = [t("tab_guide")] + t("tabs")
 try:  # the theme switch reloads the page; reopen the tab the viewer was on
-    open_tab = tab_names[int(st.query_params.get("tab", 0))]
+    open_tab = tab_names[int(st.query_params.get("tab", 0 if demo else 1))]
 except (ValueError, IndexError):
-    open_tab = tab_names[0]
-(tab_overview, tab_cost, tab_chart, tab_t, tab_fees, tab_style, tab_fx,
+    open_tab = tab_names[0 if demo else 1]
+(tab_guide, tab_overview, tab_cost, tab_chart, tab_t, tab_fees, tab_style, tab_fx,
  tab_trades) = st.tabs(tab_names, default=open_tab)
+
+# ---------- getting started ----------
+with tab_guide:
+    st.subheader(t("guide_title"))
+    st.markdown(t("guide_intro"))
+    st.divider()
+    st.markdown(f"#### {t('guide_s1')}")
+    st.markdown(t("guide_s1_body"))
+    with st.expander(t("guide_s1_mistakes")):
+        st.markdown(t("guide_s1_mistakes_body"))
+    st.markdown(f"#### {t('guide_s2')}")
+    st.markdown(t("guide_s2_body"))
+    st.markdown(f"#### {t('guide_s3')}")
+    st.markdown(t("guide_s3_table"))
+    st.markdown(f"#### {t('guide_s4')}")
+    st.markdown(t("guide_s4_body"))
+    st.markdown(md(t("plans_table", month=price_of("pro_month"), year=price_of("pro_year"),
+                     report=price_of("report"))))
+    g0, g1 = st.columns(2)
+    with g0:
+        offer("pro", "guide")
+    with g1:
+        offer("report", "guide")
+    st.markdown(f"#### {t('guide_faq')}")
+    for q in ("safe", "diff", "brokers", "advice"):
+        with st.expander(t(f"faq_{q}_q")):
+            st.markdown(t(f"faq_{q}_a"))
 
 # ---------- overview ----------
 with tab_overview:
