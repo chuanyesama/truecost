@@ -432,15 +432,54 @@ def offer(kind: str, where: str) -> None:
                     st.warning(t("offer_bad_email"))
 
 
+def feedback_form(where: str) -> None:
+    with st.form(f"feedback_{where}", clear_on_submit=True, border=False):
+        text = st.text_area(t("feedback_label"), max_chars=1000, height=140, placeholder=t("feedback_placeholder"))
+        email = st.text_input(t("offer_email"), placeholder="you@example.com")
+        if st.form_submit_button(t("feedback_send"), type="primary") and text.strip():
+            analytics.track("feedback", text=text.strip(), email=email.strip(), where=where, lang=lang)
+            st.success(t("feedback_thanks"))
+
+
+def survey() -> None:
+    """What to build next and whether anyone would pay for it; answers go to analytics as stable keys."""
+    if st.session_state.get("survey_done"):
+        st.success(t("survey_thanks"))
+        return
+    ccy = B if B in PRICES["pro_month"] else "USD"
+    scale = PRICES["pro_month"][ccy] / PRICES["pro_month"]["AUD"]
+    with st.form("survey", border=False):
+        pay = st.radio(t("sv_pay_q", price=price_of("pro_month")), ["yes", "cheaper", "maybe", "no"],
+                       format_func=lambda k: t(f"sv_pay_{k}"), index=None)
+        price = st.select_slider(t("sv_price_q"), [0, 3, 5, 9, 15], value=9,
+                                 format_func=lambda v: t("sv_price_free") if v == 0
+                                 else money(round(v * scale), ccy, sign=False) + t("sv_per_month"))
+        report = st.radio(t("sv_report_q", price=price_of("report")), ["yes", "maybe", "no"],
+                          format_func=lambda k: t(f"sv_report_{k}"), index=None, horizontal=True)
+        ai = st.multiselect(t("sv_ai_q"), ["ask", "review", "coach", "import", "explain"],
+                            format_func=lambda k: t(f"sv_ai_{k}"), placeholder=t("sv_ai_placeholder"))
+        ai_text = st.text_area(t("sv_ai_text"), max_chars=1000, height=100)
+        other = st.text_area(t("sv_other"), max_chars=1000, height=100, placeholder=t("feedback_placeholder"))
+        email = st.text_input(t("sv_email"), placeholder="you@example.com")
+        if st.form_submit_button(t("sv_send"), type="primary"):
+            analytics.track("survey", pay=pay, price_aud=price, report=report, ai=ai, ai_text=ai_text.strip(),
+                            other=other.strip(), email=email.strip(), base=B, demo=demo, lang=lang)
+            st.session_state.survey_done = True
+            st.rerun()
+
+
 with st.sidebar:
     st.divider()
     st.markdown(f"##### ⭐ {t('pro_title')}")
     st.caption(t("pro_pitch"))
+    st.warning(t("pro_status"))
     offer("pro", "sidebar")
     st.caption(t("plans_pointer"))
     st.markdown(f"##### 📄 {t('offer_title')}")
     st.caption(t("offer_short"))
     offer("report", "sidebar")
+    with st.popover(t("feedback_title"), width="stretch"):
+        feedback_form("sidebar")
     st.caption(t("sidebar_footer"))
 m_ = lambda x, sign=True, d=0: money(x, B, sign, d)  # noqa: E731
 a = r.attribution
@@ -536,6 +575,7 @@ with tab_guide:
     if demo:
         st.caption(t("demo_note"))
     finding_cards()
+    st.info(md(t("survey_callout")))
     if demo:
         st.divider()
         st.subheader(t("steps_title"))
@@ -553,6 +593,7 @@ with tab_guide:
         st.markdown(t("guide_s3_table"))
     st.divider()
     st.subheader(t("guide_s4"))
+    st.warning(t("launch_status"))
     st.markdown(t("guide_s4_body"))
     st.markdown(md(t("plans_table", month=price_of("pro_month"), year=price_of("pro_year"),
                      report=price_of("report"))))
@@ -561,8 +602,13 @@ with tab_guide:
         offer("pro", "guide")
     with g1:
         offer("report", "guide")
+    st.divider()
+    with st.container(border=True):
+        st.subheader(t("survey_title"))
+        st.caption(t("survey_sub"))
+        survey()
     st.markdown(f"#### {t('guide_faq')}")
-    for q in ("safe", "diff", "brokers", "advice"):
+    for q in ("pro_setup", "safe", "diff", "brokers", "advice"):
         with st.expander(t(f"faq_{q}_q")):
             st.markdown(t(f"faq_{q}_a"))
     st.divider()
@@ -572,11 +618,7 @@ with tab_guide:
         st.markdown(t("privacy_body"))
     with p1.container(border=True):
         st.markdown(f"#### {t('feedback_title')}")
-        with st.form("feedback", clear_on_submit=True, border=False):
-            text = st.text_area(t("feedback_label"), max_chars=1000, height=140)
-            if st.form_submit_button(t("feedback_send")) and text.strip():
-                analytics.track("feedback", text=text.strip(), lang=lang)
-                st.success(t("feedback_thanks"))
+        feedback_form("home")
     st.caption(t("disclaimer"))
 
 # ---------- overview ----------

@@ -9,10 +9,45 @@ EN = {
     # app chrome
     "lang": "Language",
     "tab_home": "🏠 Home",
+    "pro_status": "🚧 Not launched yet — nothing can be bought. The button only adds you to the waitlist.",
+    "launch_status": "🚧 **What's live today is the free version** — every analysis above and in the tabs works now. "
+                     "**Pro, the annual report and the AI features are still being built and can't be bought yet**; "
+                     "the buttons below only register interest, nothing is charged. Your answers in the survey below "
+                     "decide what we build first and what it costs.",
+    "survey_callout": "🙋 **Pro, the annual report and AI aren't live yet.** Tell us in 30 seconds what you'd want and "
+                      "whether you'd pay → **Help us decide what's next**, further down this page.",
+    "survey_title": "🙋 Help us decide what's next",
+    "survey_sub": "30 seconds, every question optional. We read every answer.",
+    "sv_pay_q": "Would you pay for Pro (auto-sync from IBKR, today's trades, one-click refresh) at about {price}/month?",
+    "sv_pay_yes": "Yes, that price is fine", "sv_pay_cheaper": "Yes, but only if it were cheaper",
+    "sv_pay_maybe": "Not sure yet", "sv_pay_no": "No, the free version is enough for me",
+    "sv_price_q": "What monthly price feels fair to you?",
+    "sv_price_free": "Nothing", "sv_per_month": "/mo",
+    "sv_report_q": "Would you buy a one-off annual PDF report (for your records or your accountant) at about {price}?",
+    "sv_report_yes": "Yes", "sv_report_maybe": "Maybe", "sv_report_no": "No",
+    "sv_ai_q": "Which AI features would you actually use?",
+    "sv_ai_placeholder": "Pick any",
+    "sv_ai_ask": "Ask about my account in plain words (\"How much did NVDA make me this year?\")",
+    "sv_ai_review": "A monthly review of my trading, written for me",
+    "sv_ai_coach": "Spot my bad habits and remind me before I repeat them",
+    "sv_ai_import": "Read statements from other brokers (Futu, Tiger, CommSec…)",
+    "sv_ai_explain": "Explain my numbers (fees, currency, cost) in plain language",
+    "sv_ai_text": "What would you most want AI to do for you — and what worries you about it (accuracy, privacy…)?",
+    "sv_other": "Anything else? Missing features, confusing parts, numbers that look wrong…",
+    "sv_email": "Email (optional — only if you'd like a reply or early access)",
+    "sv_send": "Send answers",
+    "survey_thanks": "Thank you! Your answers decide what we build next. 🙏",
+    "feedback_placeholder": "Anything helps: a number that looks wrong, a word you didn't understand, a feature you miss…",
+    "faq_pro_setup_q": "What will Pro need from me?",
+    "faq_pro_setup_a": "A one-time setup of about 5 minutes: in the IBKR web portal (Performance & Reports → Flex "
+                       "Queries) you create two queries (trade history and today's executions) and a Flex token, then "
+                       "paste them into TrueCost. After that the site syncs by itself every time you open it. A Flex "
+                       "token can only read reports — it can't place orders or move money. It lasts up to a year; "
+                       "renewing it takes a minute in IBKR.",
     "hero_pills": ["💱 Trading vs currency", "🎯 Real cost after round trips", "💸 Every fee counted",
                    "📈 Charts with your buys & sells"],
     "offer_short": "Your year in one PDF, ready for your accountant.",
-    "sidebar_footer": "🔒 Your statement is never stored · privacy and feedback at the bottom of 🏠 Home. "
+    "sidebar_footer": "🔒 Your statement is never stored · privacy notes at the bottom of 🏠 Home. "
                       "Not tax, financial or investment advice.",
     "hero_title": "Did your IBKR profit come from trading — or from the exchange rate?",
     "hero_sub": "Upload your IBKR statement and see, in your home currency: where your money really came from, "
@@ -133,13 +168,13 @@ EN = {
     "offer_body": "Your year in one PDF: P/L in your home currency split into trading vs currency, every closed "
                   "trade with cost and proceeds at each day's rate, fees and round-trip results — ready to keep or "
                   "hand to your accountant.",
-    "report_button": "Get the report — {price}",
+    "report_button": "Pre-order the report — about {price}",
     "pro_title": "TrueCost Pro",
     "pro_pitch": "Open the site and see today's trades and positions — synced from IBKR, one click to refresh. "
                  "Plus multi-year history, intraday charts and AI.",
-    "pro_button": "Join Pro — {price}/month",
+    "pro_button": "Join the Pro waitlist — about {price}/month",
     "plans_title": "Free vs Pro",
-    "plans_table": "| | Free | Pro |\n|---|---|---|\n"
+    "plans_table": "| | Free (live) | Pro (🚧 in development) |\n|---|---|---|\n"
                    "| Getting your data | Download CSV & upload | **Auto-sync, today's trades, one-click refresh** |\n"
                    "| Account | None, nothing stored | Sign in; encrypted IBKR token |\n"
                    "| P/L split, real cost, round trips, fees, style | ✅ | ✅ |\n"
@@ -148,11 +183,12 @@ EN = {
                    "| AI: ask your account, monthly review | — | ✅ |\n"
                    "| Annual report (PDF) | {report} each | Included |\n\n"
                    "**Pro: {month}/month or {year}/year.**",
-    "offer_soon": "Coming soon! Leave your email and we'll tell you when it's ready (and give you an early-bird price).",
+    "offer_soon": "Not live yet — nothing was charged. Leave your email and we'll tell you when it's ready "
+                  "(with an early-bird price). Even better: fill in the short survey on 🏠 Home.",
     "offer_email": "Email (optional)", "offer_notify": "Notify me",
     "offer_thanks": "Thanks — you're on the list.", "offer_bad_email": "That email doesn't look right.",
-    "feedback_title": "💬 Feedback", "feedback_label": "What's missing, wrong or confusing?",
-    "feedback_send": "Send", "feedback_thanks": "Thank you!",
+    "feedback_title": "💬 Feedback & suggestions", "feedback_label": "What's missing, wrong or confusing?",
+    "feedback_send": "Send", "feedback_thanks": "Thank you — we read every message!",
     "privacy_title": "🔒 Privacy",
     "privacy_body": "- Your statement is processed for your session only; the temporary file is deleted right after "
                     "parsing and results expire within an hour.\n"
@@ -160,7 +196,8 @@ EN = {
                     "statement was uploaded, base currency, number of markets, a rough trade-count range, and which "
                     "buttons were clicked. **No amounts, symbols, account numbers or statement contents.**\n"
                     "- A random id identifies one visit only; we don't track you across visits.\n"
-                    "- Your email and feedback are stored only if you type them in, and used only to reply or notify you.\n"
+                    "- Your email, feedback and survey answers are stored only if you send them, and used only to "
+                    "improve TrueCost, reply or notify you.\n"
                     "- Analytics provider: PostHog (EU servers).",
     "theme_help": "Dark mode (saved in this browser; the page reloads)",
     "sort_by": "Sort by",
@@ -370,9 +407,41 @@ EN = {
 ZH = {
     "lang": "语言",
     "tab_home": "🏠 首页",
+    "pro_status": "🚧 还没上线，暂时不能购买。点按钮只是加入等候名单，不会扣款。",
+    "launch_status": "🚧 **目前上线的是免费版**：上面和各个标签页里的分析现在都能直接用。"
+                     "**专业版、年度报告和 AI 功能都还在开发中，暂时不能购买**；下面的按钮只是登记兴趣，不会扣款。"
+                     "先做哪个、定什么价，由你在下面问卷里的回答决定。",
+    "survey_callout": "🙋 **专业版、年度报告和 AI 功能还没上线。** 花 30 秒告诉我们你想要什么、愿不愿意付费 → "
+                      "见本页下方「**帮我们决定下一步**」。",
+    "survey_title": "🙋 帮我们决定下一步做什么",
+    "survey_sub": "30 秒，每题都可以不填。每一份回答我们都会看。",
+    "sv_pay_q": "专业版（从 IBKR 自动同步、看到当天交易、一键刷新）大约 {price}/月，你会付费吗？",
+    "sv_pay_yes": "会，这个价格可以", "sv_pay_cheaper": "会，但要更便宜才行",
+    "sv_pay_maybe": "还不确定", "sv_pay_no": "不会，免费版就够了",
+    "sv_price_q": "你觉得多少钱一个月比较合理？",
+    "sv_price_free": "不付费", "sv_per_month": "/月",
+    "sv_report_q": "一次性的年度 PDF 报告（自己留档或交给会计师），大约 {price}，你会买吗？",
+    "sv_report_yes": "会", "sv_report_maybe": "可能", "sv_report_no": "不会",
+    "sv_ai_q": "下面哪些 AI 功能你真的会用？",
+    "sv_ai_placeholder": "可多选",
+    "sv_ai_ask": "用大白话问我的账户（“我今年 NVDA 赚了多少？”）",
+    "sv_ai_review": "每月自动给我写一份交易复盘",
+    "sv_ai_coach": "找出我的坏习惯，在我重犯之前提醒我",
+    "sv_ai_import": "读取其他券商的对账单（富途、老虎、CommSec……）",
+    "sv_ai_explain": "用大白话解释我的数字（佣金、汇率、成本）",
+    "sv_ai_text": "你最希望 AI 帮你做什么？对 AI 有什么顾虑（准不准、隐私……）？",
+    "sv_other": "还有什么想说的？缺什么功能、哪里看不懂、哪个数字看着不对……",
+    "sv_email": "邮箱（选填，想要回复或抢先体验再填）",
+    "sv_send": "提交",
+    "survey_thanks": "谢谢！你的回答会决定我们接下来先做什么。🙏",
+    "feedback_placeholder": "什么都可以说：哪个数字看着不对、哪个词看不懂、缺了什么功能……",
+    "faq_pro_setup_q": "专业版需要我做什么设置？",
+    "faq_pro_setup_a": "一次性设置，大约 5 分钟：在 IBKR 网页版（业绩与报表 → Flex 查询）里建两个查询（历史交易、当天成交），"
+                       "生成一个 Flex token，然后粘贴到 TrueCost。之后每次打开网站都会自动同步。Flex token 只能读取报表，"
+                       "不能下单，也不能转账。它最长有效一年，到期后在 IBKR 里续一下，一分钟就好。",
     "hero_pills": ["💱 交易 vs 汇率", "🎯 做 T 后的真实成本", "💸 每一笔费用", "📈 K 线上的买卖点"],
     "offer_short": "一整年浓缩成一份 PDF，可直接交给会计师。",
-    "sidebar_footer": "🔒 不保存你的对账单 · 隐私说明和反馈在「🏠 首页」底部。仅供参考，不构成税务、财务或投资建议。",
+    "sidebar_footer": "🔒 不保存你的对账单 · 隐私说明在「🏠 首页」底部。仅供参考，不构成税务、财务或投资建议。",
     "hero_title": "你在 IBKR 赚的钱，是交易赚的，还是汇率给的？",
     "hero_sub": "上传 IBKR 对账单，用你的本币看清：钱到底从哪来、做 T 之后的真实成本、佣金吃掉了多少。",
     "hero_upload": "把 IBKR 活动对账单（CSV）拖到这里",
@@ -483,12 +552,12 @@ ZH = {
     "offer_title": "年度报告（PDF）",
     "offer_body": "把你一整年浓缩成一份 PDF：按本币计算的盈亏（交易 vs 汇率）、每笔平仓按当日汇率折算的成本和收入、"
                   "费用和做 T 成绩——方便自己留存，也可以直接交给会计师。",
-    "report_button": "获取报告 — {price}",
+    "report_button": "预约年度报告 — 预计 {price}",
     "pro_title": "TrueCost 专业版",
     "pro_pitch": "打开网站就能看到今天的交易和持仓——自动从 IBKR 同步，点一下就刷新。另有多年历史合并、分钟级 K 线和 AI 分析。",
-    "pro_button": "加入专业版 — {price}/月",
+    "pro_button": "加入专业版等候名单 — 预计 {price}/月",
     "plans_title": "免费版 vs 专业版",
-    "plans_table": "| | 免费版 | 专业版 |\n|---|---|---|\n"
+    "plans_table": "| | 免费版（已上线） | 专业版（🚧 开发中） |\n|---|---|---|\n"
                    "| 数据导入 | 自己下载 CSV 上传 | **自动同步、当天交易、一键刷新** |\n"
                    "| 账户 | 不用注册，不保存数据 | 登录；IBKR token 加密保存 |\n"
                    "| 盈亏拆解、真实成本、做T、费用、交易风格 | ✅ | ✅ |\n"
@@ -497,17 +566,17 @@ ZH = {
                    "| AI：问你的账户、每月复盘 | — | ✅ |\n"
                    "| 年度报告 PDF | 每份 {report} | 包含 |\n\n"
                    "**专业版：{month}/月，或 {year}/年。**",
-    "offer_soon": "即将推出！留下邮箱，上线时第一时间通知你（并享受早鸟价）。",
+    "offer_soon": "还没上线，没有扣款。留下邮箱，上线时第一时间通知你（并享受早鸟价）。也欢迎填一下「🏠 首页」的小问卷。",
     "offer_email": "邮箱（选填）", "offer_notify": "通知我",
     "offer_thanks": "谢谢，已登记！", "offer_bad_email": "邮箱格式好像不对。",
-    "feedback_title": "💬 反馈", "feedback_label": "哪里缺了、错了或者看不懂？",
-    "feedback_send": "发送", "feedback_thanks": "谢谢！",
+    "feedback_title": "💬 提意见", "feedback_label": "哪里缺了、错了或者看不懂？",
+    "feedback_send": "发送", "feedback_thanks": "谢谢！每一条我们都会看。",
     "privacy_title": "🔒 隐私",
     "privacy_body": "- 你的对账单只在本次会话中处理，解析完立即删除临时文件，分析结果一小时内过期。\n"
                     "- 为了改进 TrueCost，我们统计匿名使用情况：打开页面、语言、是否上传了对账单、本币、"
                     "市场数量、交易笔数的大致区间、点击了哪些按钮。**不记录任何金额、股票代码、账户号码或对账单内容。**\n"
                     "- 每次访问使用一个随机编号，不会跨访问追踪你。\n"
-                    "- 只有你主动填写时才会保存邮箱和反馈，仅用于回复或通知你。\n"
+                    "- 只有你主动提交时才会保存邮箱、反馈和问卷回答，仅用于改进 TrueCost、回复或通知你。\n"
                     "- 统计服务商：PostHog（欧洲服务器）。",
     "theme_help": "深色模式（保存在本浏览器，切换后页面会刷新）",
     "sort_by": "排序",
