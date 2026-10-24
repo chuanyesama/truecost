@@ -1,0 +1,735 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TrueCost — your real IBKR profit, in your own currency</title>
+<meta name="description" content="Upload your Interactive Brokers statement and see, in your home currency, whether your profit came from trading or the exchange rate, your real cost after trading around a position, and what fees cost you. Free, no sign-up.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%234f46e5'/><text x='50' y='68' font-size='54' font-family='Arial' font-weight='700' fill='white' text-anchor='middle'>T</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f6f7fb; --card: #ffffff; --ink: #1c1f2b; --muted: #5b6175; --line: #e1e4ee;
+    --accent: #4f46e5; --accent-2: #4338ca; --accent-soft: #eef0ff;
+    --pos: #2a78d6; --neg: #c2410c; --ok: #15803d;
+    --shadow: 0 1px 2px rgba(20,24,40,.04), 0 8px 28px rgba(20,24,40,.08);
+    --hero: linear-gradient(160deg, #eef0ff 0%, #f6f7fb 55%);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0f1118; --card: #171a26; --ink: #e6e8f0; --muted: #9aa0b4; --line: #2a2e3f;
+      --accent: #818cf8; --accent-2: #a5b4fc; --accent-soft: #1e1b4b;
+      --pos: #60a5fa; --neg: #fb923c; --ok: #4ade80;
+      --shadow: none; --hero: linear-gradient(160deg, #1b1a3a 0%, #0f1118 60%);
+    }
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: var(--bg); color: var(--ink); line-height: 1.6;
+         font-family: Inter, "PingFang SC", "Microsoft YaHei", "Noto Sans SC", system-ui, sans-serif;
+         -webkit-font-smoothing: antialiased; }
+  a { color: var(--accent-2); }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 20px; }
+  section { padding: 88px 0; }
+  h1, h2, h3 { line-height: 1.2; letter-spacing: -0.02em; margin: 0; }
+  h2 { font-size: clamp(1.7rem, 3.4vw, 2.4rem); }
+  .eyebrow { color: var(--accent); font-weight: 700; font-size: .8rem; letter-spacing: .1em; text-transform: uppercase; }
+  .lead { color: var(--muted); font-size: 1.12rem; max-width: 46rem; }
+  .center { text-align: center; } .center .lead { margin-left: auto; margin-right: auto; }
+
+  /* nav */
+  nav { position: sticky; top: 0; z-index: 20; background: color-mix(in srgb, var(--bg) 85%, transparent);
+        backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
+  nav .wrap { display: flex; align-items: center; gap: 24px; height: 64px; }
+  .logo { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 1.15rem; color: var(--ink); text-decoration: none; }
+  .logo i { width: 30px; height: 30px; border-radius: 8px; background: var(--accent); color: #fff; display: grid;
+            place-items: center; font-style: normal; font-size: .95rem; }
+  .links { display: flex; gap: 22px; margin-left: 12px; }
+  .links a { color: var(--muted); text-decoration: none; font-weight: 500; font-size: .95rem; }
+  .links a:hover { color: var(--ink); }
+  .nav-right { margin-left: auto; display: flex; gap: 10px; align-items: center; }
+  .lang { border: 1px solid var(--line); background: var(--card); color: var(--ink); border-radius: 8px;
+          padding: 6px 10px; font: inherit; font-size: .88rem; cursor: pointer; }
+  .btn { display: inline-flex; align-items: center; gap: 8px; border-radius: 10px; padding: 12px 22px; font-weight: 600;
+         text-decoration: none; font-size: 1rem; border: 1px solid transparent; white-space: nowrap; transition: transform .15s, box-shadow .15s, background .15s; }
+  .btn-primary { background: var(--accent); color: #fff; box-shadow: 0 6px 18px rgba(79,70,229,.28); }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 10px 24px rgba(79,70,229,.34); }
+  .btn-ghost { background: var(--card); color: var(--ink); border-color: var(--line); }
+  .btn-ghost:hover { border-color: var(--accent); }
+  .btn-sm { padding: 8px 16px; font-size: .92rem; }
+  @media (max-width: 860px) { .links { display: none; } }
+
+  /* hero */
+  .hero { background: var(--hero); padding: 72px 0 40px; }
+  .hero h1 { font-size: clamp(2.1rem, 5.2vw, 3.6rem); font-weight: 800; max-width: 880px; margin: 14px auto 0; text-wrap: balance; }
+  .hero h1 em { font-style: normal; white-space: nowrap;background: linear-gradient(90deg, var(--accent), #2a78d6);
+                -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .hero .lead { margin-top: 18px; }
+  .checks { display: flex; flex-wrap: wrap; gap: 10px 22px; justify-content: center; margin: 22px 0 0; padding: 0; list-style: none; }
+  .checks li { color: var(--ink); font-weight: 500; font-size: .98rem; }
+  .checks li::before { content: "✓"; color: var(--ok); font-weight: 800; margin-right: 8px; }
+  .badge { display: inline-block; margin-top: 22px; background: var(--card); border: 1px solid var(--line); border-radius: 999px;
+           padding: 6px 14px; font-size: .9rem; font-weight: 500; }
+  .cta { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 24px; }
+  .trust { color: var(--muted); font-size: .88rem; margin-top: 16px; }
+
+  /* product mock */
+  .mock { margin: 48px auto 0; max-width: 1000px; background: var(--card); border: 1px solid var(--line); border-radius: 16px;
+          box-shadow: 0 30px 80px rgba(20,24,40,.14); overflow: hidden; text-align: left; }
+  .mock-bar { display: flex; align-items: center; gap: 7px; padding: 12px 16px; border-bottom: 1px solid var(--line); }
+  .mock-bar span { width: 11px; height: 11px; border-radius: 50%; background: #f87171; }
+  .mock-bar span:nth-child(2) { background: #fbbf24; } .mock-bar span:nth-child(3) { background: #34d399; }
+  .mock-bar b { margin: 0 auto; font-weight: 500; font-size: .8rem; color: var(--muted); background: var(--bg);
+                border-radius: 6px; padding: 3px 40px; }
+  .mock-body { padding: 22px; background: var(--bg); }
+  .mock-tabs { display: flex; gap: 18px; font-size: .85rem; font-weight: 600; color: var(--muted); border-bottom: 1px solid var(--line);
+               padding-bottom: 8px; margin-bottom: 16px; overflow: hidden; white-space: nowrap; }
+  .mock-tabs .on { color: var(--accent); box-shadow: 0 10px 0 -8px var(--accent); }
+  .mock-title { font-weight: 700; font-size: 1.1rem; margin-bottom: 4px; }
+  .mock-note { font-size: .8rem; color: var(--muted); margin-bottom: 14px; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  @media (max-width: 760px) { .grid3 { grid-template-columns: 1fr; } }
+  .mcard { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px; box-shadow: var(--shadow); }
+  .mcard h4 { margin: 0 0 10px; font-size: .92rem; }
+  .mlabel { font-size: .78rem; color: var(--muted); }
+  .mvalue { font-size: 1.7rem; font-weight: 700; letter-spacing: -0.02em; line-height: 1.2; margin-bottom: 6px; }
+  .mtext { font-size: .84rem; color: var(--muted); }
+  .pos { color: var(--pos); } .neg { color: var(--neg); }
+
+  /* pains / features */
+  .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 44px; }
+  @media (max-width: 860px) { .cards { grid-template-columns: 1fr; } }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 26px; box-shadow: var(--shadow); }
+  .card .ico { font-size: 1.6rem; }
+  .card h3 { font-size: 1.15rem; margin: 12px 0 8px; }
+  .card p { margin: 0; color: var(--muted); }
+  .feat { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 40px; }
+  @media (max-width: 960px) { .feat { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 520px) { .feat { grid-template-columns: 1fr; } }
+  .feat div { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 18px; }
+  .feat b { display: block; margin-bottom: 4px; }
+  .feat span { color: var(--muted); font-size: .92rem; }
+
+  /* calculator */
+  .calc { display: grid; grid-template-columns: 1.1fr 1fr; gap: 24px; margin-top: 40px; align-items: start; }
+  @media (max-width: 900px) { .calc { grid-template-columns: 1fr; } }
+  .panel { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 24px; box-shadow: var(--shadow); }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  label { display: block; font-size: .85rem; color: var(--muted); font-weight: 500; margin-bottom: 4px; }
+  input { width: 100%; font: inherit; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 9px 11px; }
+  input:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+  .rounds { margin-top: 18px; }
+  .rounds-head, .round { display: grid; grid-template-columns: 1fr 1fr 1fr 34px; gap: 8px; align-items: center; }
+  .rounds-head { font-size: .78rem; color: var(--muted); font-weight: 600; margin-bottom: 6px; }
+  .round { margin-bottom: 8px; }
+  .x { border: 0; background: transparent; color: var(--muted); font-size: 1.1rem; cursor: pointer; border-radius: 6px; height: 36px; }
+  .x:hover { background: var(--bg); color: var(--neg); }
+  .add { margin-top: 4px; border: 1px dashed var(--accent); background: transparent; color: var(--accent); font: inherit; font-weight: 600;
+         border-radius: 8px; padding: 8px 14px; cursor: pointer; }
+  .result h3 { font-size: 1rem; color: var(--muted); font-weight: 600; }
+  .compare { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 14px 0; }
+  .compare div { border-radius: 12px; padding: 14px; background: var(--bg); }
+  .compare .real { background: var(--accent-soft); }
+  .compare small { color: var(--muted); font-weight: 600; font-size: .8rem; }
+  .compare strong { display: block; font-size: 1.7rem; letter-spacing: -0.02em; }
+  .compare em { font-style: normal; font-size: .88rem; color: var(--muted); }
+  .bars { margin: 16px 0 8px; }
+  .bar { height: 12px; border-radius: 6px; background: var(--line); position: relative; margin: 6px 0 14px; overflow: hidden; }
+  .bar i { position: absolute; inset: 0 auto 0 0; border-radius: 6px; transition: width .4s ease; }
+  .say { background: var(--bg); border-radius: 12px; padding: 14px; font-size: .95rem; }
+  .fine { color: var(--muted); font-size: .8rem; margin-top: 10px; }
+
+  /* personas */
+  .persona .tag { display: inline-block; font-size: .75rem; font-weight: 700; color: var(--accent); background: var(--accent-soft);
+                  border-radius: 999px; padding: 3px 10px; margin-bottom: 8px; }
+  .persona ul { margin: 12px 0 0; padding-left: 18px; color: var(--muted); }
+
+  /* not */
+  .nots { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 36px; }
+  @media (max-width: 860px) { .nots { grid-template-columns: 1fr; } }
+  .nots div { border-left: 3px solid var(--accent); padding: 4px 0 4px 18px; }
+  .nots b { display: block; font-size: 1.05rem; margin-bottom: 4px; }
+  .nots span { color: var(--muted); }
+
+  /* pricing */
+  .plans { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 40px; }
+  @media (max-width: 900px) { .plans { grid-template-columns: 1fr; } }
+  .plan { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 28px; display: flex; flex-direction: column; }
+  .plan.main { border: 2px solid var(--accent); box-shadow: 0 16px 40px rgba(79,70,229,.14); }
+  .plan .state { align-self: flex-start; font-size: .75rem; font-weight: 700; border-radius: 999px; padding: 3px 10px; }
+  .live { background: #dcfce7; color: #166534; } .soon { background: #fef3c7; color: #92400e; }
+  .plan h3 { font-size: 1.25rem; margin: 14px 0 4px; }
+  .price { font-size: 2.2rem; font-weight: 800; letter-spacing: -0.03em; }
+  .price small { font-size: .95rem; font-weight: 500; color: var(--muted); }
+  .plan ul { list-style: none; padding: 0; margin: 18px 0 24px; flex: 1; }
+  .plan li { padding: 6px 0; border-bottom: 1px dashed var(--line); font-size: .95rem; }
+  .plan li::before { content: "✓"; color: var(--ok); font-weight: 800; margin-right: 8px; }
+  .plan .btn { justify-content: center; }
+  .soon-note { margin-top: 18px; text-align: center; color: var(--muted); font-size: .92rem; }
+
+  /* faq */
+  .faq { max-width: 780px; margin: 36px auto 0; }
+  details { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px 20px; margin-bottom: 10px; }
+  summary { font-weight: 600; cursor: pointer; list-style: none; display: flex; justify-content: space-between; gap: 16px; }
+  summary::after { content: "+"; color: var(--accent); font-size: 1.3rem; line-height: 1; }
+  details[open] summary::after { content: "−"; }
+  details p { color: var(--muted); margin: 10px 0 0; }
+
+  /* final */
+  .final { background: linear-gradient(135deg, #4f46e5, #2a78d6); color: #fff; border-radius: 24px; padding: 56px 28px; text-align: center; }
+  .final h2 { color: #fff; } .final p { color: rgba(255,255,255,.85); margin: 12px 0 26px; }
+  .final .btn { background: #fff; color: #4338ca; }
+  footer { padding: 40px 0 56px; color: var(--muted); font-size: .88rem; }
+  footer .wrap { display: flex; flex-wrap: wrap; gap: 12px 28px; justify-content: space-between; }
+  footer a { color: var(--muted); }
+
+  /* motion */
+  .reveal { opacity: 0; transform: translateY(18px); transition: opacity .7s ease, transform .7s ease; }
+  .reveal.in { opacity: 1; transform: none; }
+  .float { animation: float 7s ease-in-out infinite; }
+  @keyframes float { 50% { transform: translateY(-6px); } }
+  @media (prefers-reduced-motion: reduce) {
+    .reveal { opacity: 1; transform: none; transition: none; } .float { animation: none; } html { scroll-behavior: auto; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <a class="logo" href="#"><i>T</i>TrueCost</a>
+    <div class="links">
+      <a href="#why" data-t="nav_why"></a>
+      <a href="#calculator" data-t="nav_calc"></a>
+      <a href="#who" data-t="nav_who"></a>
+      <a href="#pricing" data-t="nav_pricing"></a>
+      <a href="#faq" data-t="nav_faq"></a>
+    </div>
+    <div class="nav-right">
+      <button class="lang" id="lang" type="button" aria-label="Language">中文</button>
+      <a class="btn btn-primary btn-sm app-link" href="https://truecost.streamlit.app" data-t="nav_cta"></a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero center">
+  <div class="wrap">
+    <div class="eyebrow reveal" data-t="hero_eyebrow"></div>
+    <h1 class="reveal" data-t="hero_title" data-html></h1>
+    <p class="lead reveal" data-t="hero_sub"></p>
+    <ul class="checks reveal">
+      <li data-t="hero_c1"></li><li data-t="hero_c2"></li><li data-t="hero_c3"></li>
+    </ul>
+    <div class="badge reveal" data-t="hero_badge"></div>
+    <div class="cta reveal">
+      <a class="btn btn-primary app-link" href="https://truecost.streamlit.app" data-t="hero_cta"></a>
+      <a class="btn btn-ghost" href="#calculator" data-t="hero_cta2"></a>
+    </div>
+    <div class="trust reveal" data-t="hero_trust"></div>
+
+    <div class="mock reveal" aria-label="TrueCost screenshot">
+      <div class="mock-bar"><span></span><span></span><span></span><b>truecost.streamlit.app</b></div>
+      <div class="mock-body">
+        <div class="mock-tabs"><span class="on" data-t="m_home"></span><span data-t="m_t1"></span><span data-t="m_t2"></span>
+          <span data-t="m_t3"></span><span data-t="m_t4"></span><span data-t="m_t5"></span><span data-t="m_t6"></span></div>
+        <div class="mock-title" data-t="m_title"></div>
+        <div class="mock-note" data-t="m_note"></div>
+        <div class="grid3">
+          <div class="mcard float">
+            <h4 data-t="m_c1"></h4>
+            <div class="mlabel" data-t="m_trading"></div>
+            <div class="mvalue pos"><span class="count" data-to="9033" data-prefix="+A$"></span></div>
+            <div class="mlabel" data-t="m_fx"></div>
+            <div class="mvalue pos"><span class="count" data-to="1220" data-prefix="+A$"></span></div>
+            <div class="mtext" data-t="m_c1_line"></div>
+          </div>
+          <div class="mcard float" style="animation-delay:-2s">
+            <h4 data-t="m_c2"></h4>
+            <div class="mlabel">NVDA</div>
+            <div class="mvalue" data-t="m_zero"></div>
+            <div class="mtext" data-t="m_c2_line"></div>
+          </div>
+          <div class="mcard float" style="animation-delay:-4s">
+            <h4 data-t="m_c3"></h4>
+            <div class="mlabel" data-t="m_fees"></div>
+            <div class="mvalue neg"><span class="count" data-to="280" data-prefix="−A$"></span></div>
+            <div class="mtext" data-t="m_c3_line"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<section id="why">
+  <div class="wrap center">
+    <div class="eyebrow reveal" data-t="why_eyebrow"></div>
+    <h2 class="reveal" data-t="why_title"></h2>
+    <p class="lead reveal" data-t="why_sub"></p>
+  </div>
+  <div class="wrap">
+    <div class="cards">
+      <div class="card reveal"><div class="ico">💱</div><h3 data-t="p1_t"></h3><p data-t="p1_d"></p></div>
+      <div class="card reveal"><div class="ico">🎯</div><h3 data-t="p2_t"></h3><p data-t="p2_d"></p></div>
+      <div class="card reveal"><div class="ico">💸</div><h3 data-t="p3_t"></h3><p data-t="p3_d"></p></div>
+    </div>
+    <div class="feat reveal">
+      <div><b data-t="f1_t"></b><span data-t="f1_d"></span></div>
+      <div><b data-t="f2_t"></b><span data-t="f2_d"></span></div>
+      <div><b data-t="f3_t"></b><span data-t="f3_d"></span></div>
+      <div><b data-t="f4_t"></b><span data-t="f4_d"></span></div>
+      <div><b data-t="f5_t"></b><span data-t="f5_d"></span></div>
+      <div><b data-t="f6_t"></b><span data-t="f6_d"></span></div>
+      <div><b data-t="f7_t"></b><span data-t="f7_d"></span></div>
+      <div><b data-t="f8_t"></b><span data-t="f8_d"></span></div>
+    </div>
+  </div>
+</section>
+
+<section id="calculator" style="background: var(--card); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);">
+  <div class="wrap center">
+    <div class="eyebrow reveal" data-t="calc_eyebrow"></div>
+    <h2 class="reveal" data-t="calc_title"></h2>
+    <p class="lead reveal" data-t="calc_sub"></p>
+  </div>
+  <div class="wrap">
+    <div class="calc reveal">
+      <div class="panel" style="background: var(--bg); box-shadow: none;">
+        <div class="row">
+          <div><label for="n0" data-t="c_shares"></label><input id="n0" type="number" min="1" step="1" value="100"></div>
+          <div><label for="p0" data-t="c_price"></label><input id="p0" type="number" min="0" step="0.01" value="100"></div>
+        </div>
+        <div class="rounds">
+          <div class="rounds-head"><span data-t="c_qty"></span><span data-t="c_sell"></span><span data-t="c_buy"></span><span></span></div>
+          <div id="rounds"></div>
+          <button class="add" id="add" type="button" data-t="c_add"></button>
+        </div>
+        <div class="row" style="margin-top:18px">
+          <div><label for="now" data-t="c_now"></label><input id="now" type="number" min="0" step="0.01" value="110"></div>
+          <div></div>
+        </div>
+      </div>
+      <div class="panel result" aria-live="polite">
+        <h3 data-t="c_result"></h3>
+        <div class="compare">
+          <div><small data-t="c_ibkr"></small><strong id="r_ibkr"></strong><em id="r_ibkr_pct"></em></div>
+          <div class="real"><small data-t="c_real"></small><strong id="r_real"></strong><em id="r_real_pct"></em></div>
+        </div>
+        <div class="bars">
+          <label data-t="c_ibkr"></label><div class="bar"><i id="b_ibkr" style="background: var(--muted)"></i></div>
+          <label data-t="c_real"></label><div class="bar"><i id="b_real" style="background: var(--accent)"></i></div>
+        </div>
+        <div class="say" id="r_say"></div>
+        <div class="fine" data-t="c_fine"></div>
+        <div style="margin-top:18px"><a class="btn btn-primary app-link" href="https://truecost.streamlit.app" data-t="c_cta"></a></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="who">
+  <div class="wrap center">
+    <div class="eyebrow reveal" data-t="who_eyebrow"></div>
+    <h2 class="reveal" data-t="who_title"></h2>
+  </div>
+  <div class="wrap">
+    <div class="cards">
+      <div class="card persona reveal"><span class="tag">01</span><h3 data-t="w1_t"></h3><p data-t="w1_d"></p>
+        <ul><li data-t="w1_a"></li><li data-t="w1_b"></li></ul></div>
+      <div class="card persona reveal"><span class="tag">02</span><h3 data-t="w2_t"></h3><p data-t="w2_d"></p>
+        <ul><li data-t="w2_a"></li><li data-t="w2_b"></li></ul></div>
+      <div class="card persona reveal"><span class="tag">03</span><h3 data-t="w3_t"></h3><p data-t="w3_d"></p>
+        <ul><li data-t="w3_a"></li><li data-t="w3_b"></li></ul></div>
+    </div>
+  </div>
+</section>
+
+<section style="padding-top: 0">
+  <div class="wrap">
+    <h2 class="reveal center" data-t="not_title"></h2>
+    <div class="nots reveal">
+      <div><b data-t="n1_t"></b><span data-t="n1_d"></span></div>
+      <div><b data-t="n2_t"></b><span data-t="n2_d"></span></div>
+      <div><b data-t="n3_t"></b><span data-t="n3_d"></span></div>
+    </div>
+  </div>
+</section>
+
+<section id="pricing" style="background: var(--card); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);">
+  <div class="wrap center">
+    <div class="eyebrow reveal" data-t="price_eyebrow"></div>
+    <h2 class="reveal" data-t="price_title"></h2>
+    <p class="lead reveal" data-t="price_sub"></p>
+  </div>
+  <div class="wrap">
+    <div class="plans">
+      <div class="plan main reveal">
+        <span class="state live" data-t="s_live"></span>
+        <h3 data-t="free_t"></h3>
+        <div class="price">A$0</div>
+        <ul><li data-t="free_1"></li><li data-t="free_2"></li><li data-t="free_3"></li><li data-t="free_4"></li><li data-t="free_5"></li></ul>
+        <a class="btn btn-primary app-link" href="https://truecost.streamlit.app" data-t="free_cta"></a>
+      </div>
+      <div class="plan reveal">
+        <span class="state soon" data-t="s_soon"></span>
+        <h3 data-t="pro_t"></h3>
+        <div class="price">A$9 <small data-t="pro_unit"></small></div>
+        <ul><li data-t="pro_1"></li><li data-t="pro_2"></li><li data-t="pro_3"></li><li data-t="pro_4"></li><li data-t="pro_5"></li></ul>
+        <a class="btn btn-ghost app-link" href="https://truecost.streamlit.app" data-t="soon_cta"></a>
+      </div>
+      <div class="plan reveal">
+        <span class="state soon" data-t="s_soon"></span>
+        <h3 data-t="rep_t"></h3>
+        <div class="price">A$19 <small data-t="rep_unit"></small></div>
+        <ul><li data-t="rep_1"></li><li data-t="rep_2"></li><li data-t="rep_3"></li></ul>
+        <a class="btn btn-ghost app-link" href="https://truecost.streamlit.app" data-t="soon_cta"></a>
+      </div>
+    </div>
+    <p class="soon-note reveal" data-t="price_note"></p>
+  </div>
+</section>
+
+<section id="faq">
+  <div class="wrap center"><h2 class="reveal" data-t="faq_title"></h2></div>
+  <div class="wrap faq">
+    <details class="reveal"><summary data-t="q1"></summary><p data-t="a1"></p></details>
+    <details class="reveal"><summary data-t="q2"></summary><p data-t="a2"></p></details>
+    <details class="reveal"><summary data-t="q3"></summary><p data-t="a3"></p></details>
+    <details class="reveal"><summary data-t="q4"></summary><p data-t="a4"></p></details>
+    <details class="reveal"><summary data-t="q5"></summary><p data-t="a5"></p></details>
+    <details class="reveal"><summary data-t="q6"></summary><p data-t="a6"></p></details>
+  </div>
+</section>
+
+<section style="padding-top: 0">
+  <div class="wrap">
+    <div class="final reveal">
+      <h2 data-t="final_title"></h2>
+      <p data-t="final_sub"></p>
+      <a class="btn app-link" href="https://truecost.streamlit.app" data-t="final_cta"></a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span>© 2026 TrueCost · <span data-t="foot_disclaimer"></span></span>
+    <span><a href="https://github.com/chuanyesama/truecost">GitHub</a> · <a class="app-link" href="https://truecost.streamlit.app" data-t="foot_app"></a></span>
+  </div>
+</footer>
+
+<script>
+const T = {
+  en: {
+    nav_why: "Why TrueCost", nav_calc: "Calculator", nav_who: "Who it's for", nav_pricing: "Pricing", nav_faq: "FAQ",
+    nav_cta: "Try it free",
+    hero_eyebrow: "For Interactive Brokers users · any home currency",
+    hero_title: "Did you profit from <em>trading</em> — or from the exchange rate?",
+    hero_sub: "Upload your IBKR statement and see, in your own currency, where your money really came from, your real cost after trading around a position, and what fees took.",
+    hero_c1: "Reconciles to your account to the cent", hero_c2: "Real cost after round trips", hero_c3: "Every fee laid out",
+    hero_badge: "Free · no sign-up · your statement is never stored",
+    hero_cta: "Try it with a sample account", hero_cta2: "See the round-trip calculator ↓",
+    hero_trust: "TrueCost only reads the statement you upload. It can't trade and never touches your money.",
+    m_home: "🏠 Home", m_t1: "Overview", m_t2: "Real cost", m_t3: "Chart", m_t4: "Round trips", m_t5: "Fees", m_t6: "Style",
+    m_title: "What TrueCost finds — sample account", m_note: "👀 Fictional sample account, built from real market prices.",
+    m_c1: "💱 Where the money came from", m_trading: "📈 Trading", m_fx: "💱 Currency",
+    m_c1_line: "Trading is the main source. Currency added A$1,220 your broker never shows separately.",
+    m_c2: "🎯 Real cost after round trips", m_zero: "Zero cost",
+    m_c2_line: "Round trips paid back the whole position plus US$6,495. IBKR still shows a cost of 197.85.",
+    m_c3: "💸 What trading cost", m_fees: "Commissions & fees",
+    m_c3_line: "158 orders, A$1.72 each on average — by order size, market and month.",
+    why_eyebrow: "What your broker doesn't show",
+    why_title: "Three questions IBKR can't answer for you",
+    why_sub: "IBKR reports each stock in its own currency and an average cost that forgets every round trip. If your home currency isn't USD, you're only seeing half the picture.",
+    p1_t: "Was it trading, or the exchange rate?",
+    p1_d: "Every trade converted at that day's rate, then your total split into trading vs currency (including cash you hold in USD) — adding up exactly to your account's real profit.",
+    p2_t: "What did my shares really cost?",
+    p2_d: "Sold high and bought back lower? Your real cost dropped — IBKR's average cost doesn't show it. See your diluted cost, every round, and which holdings are now free.",
+    p3_t: "How much are fees eating?",
+    p3_d: "Commissions and FX conversion costs, by order size, market and month — plus how often you're paying the minimum, and what merging orders would save.",
+    f1_t: "📊 P/L split", f1_d: "Trading, currency, income & fees",
+    f2_t: "🎯 Real cost", f2_d: "Diluted cost and zero-cost holdings",
+    f3_t: "🔁 Round trips", f3_d: "Every sell-and-buy-back, win or loss",
+    f4_t: "📈 Charts", f4_d: "Candles from 2H to 5Y with your B/S marks",
+    f5_t: "💸 Fees", f5_d: "Where commissions go, and how to save",
+    f6_t: "🧭 Trading style", f6_d: "Win rate, loss size, habits — no stock tips",
+    f7_t: "🌏 Any home currency", f7_d: "AUD, EUR, GBP, SGD… ECB rates; RBA for AUD",
+    f8_t: "🀄 English & 中文", f8_d: "Full Chinese and English interface",
+    calc_eyebrow: "Try it — no upload needed",
+    calc_title: "Round-trip calculator",
+    calc_sub: "Bought some shares, then sold part of them high and bought back lower? Enter it below and compare the cost IBKR shows with what the shares really cost you.",
+    c_shares: "Shares you first bought", c_price: "Price you paid (any currency)",
+    c_qty: "Shares sold", c_sell: "Sold at", c_buy: "Bought back at", c_add: "+ Add a round",
+    c_now: "Price now", c_result: "Your result",
+    c_ibkr: "Cost IBKR shows", c_real: "Your real cost",
+    c_fine: "IBKR's cost assumes first-in, first-out lots; the real cost is the money still in the position ÷ shares held. Fees ignored. Your own statement gives the exact figures.",
+    c_cta: "See it for your whole account →",
+    say_zero: "Your round trips have already paid back the whole position, plus {extra}. The shares you hold now cost you nothing — but IBKR still shows {ibkr}.",
+    say_lower: "Your round trips lowered your real cost by {diff} a share ({pct}). At {now}, IBKR shows {ibkrPct} — you're actually {realPct}.",
+    say_higher: "These round trips raised your real cost by {diff} a share: you sold lower than you bought back. IBKR shows {ibkrPct}; you're actually {realPct}.",
+    say_same: "No round trips yet — both costs are the same.",
+    who_eyebrow: "Who it's for", who_title: "Pick the one that sounds like you",
+    w1_t: "You trade around a core position", w1_d: "You sell into strength and buy back on dips, often several times a month.",
+    w1_a: "Know whether each round actually lowered your cost", w1_b: "See if fees quietly ate the gains",
+    w2_t: "You invest from outside the US", w2_d: "Your home currency is AUD, EUR, GBP, SGD… but you hold US stocks and USD cash.",
+    w2_a: "See how much the exchange rate added or took", w2_b: "P/L in your own currency, every trade at that day's rate",
+    w3_t: "You're an accountant", w3_d: "Clients bring you multi-currency IBKR accounts at tax time.",
+    w3_a: "Coming: per-client reports in AUD at RBA rates", w3_b: "Interested? Tell us in the feedback form in the app",
+    not_title: "What TrueCost doesn't do",
+    n1_t: "Not a broker", n1_d: "You keep trading at IBKR. TrueCost can't place orders or move money.",
+    n2_t: "Doesn't keep your statement", n2_d: "The free version reads your file for your visit only. No account, nothing stored.",
+    n3_t: "Not financial or tax advice", n3_d: "We show your own numbers. No stock tips; check tax figures with a registered tax agent.",
+    price_eyebrow: "Pricing", price_title: "Everything that's live is free",
+    price_sub: "Pro and the annual report are still being built. Nothing can be bought yet — tell us in the app what you'd pay for.",
+    s_live: "Live now", s_soon: "🚧 In development",
+    free_t: "Free", free_1: "Upload your IBKR CSV, any home currency", free_2: "Trading vs currency split",
+    free_3: "Real cost, round trips, fees, trading style", free_4: "Daily & weekly charts with your trades", free_5: "No sign-up, nothing stored",
+    free_cta: "Start free",
+    pro_t: "Pro", pro_unit: "/month (planned)",
+    pro_1: "Auto-sync from IBKR — no more CSVs", pro_2: "Today's trades, one-click refresh", pro_3: "Multi-year history, merged",
+    pro_4: "Intraday charts (2H–1M)", pro_5: "AI: ask your account, monthly review",
+    rep_t: "Annual report", rep_unit: "one-off (planned)",
+    rep_1: "Your year in one PDF, in your home currency", rep_2: "Every closed trade at that day's rate", rep_3: "Ready to hand to your accountant",
+    soon_cta: "Join the waitlist",
+    price_note: "Waitlist and survey live in the app's 🏠 Home tab — your answers decide what we build first and what it costs.",
+    faq_title: "Questions",
+    q1: "Is it safe to upload my statement?",
+    a1: "The free version never stores your file: it's read in memory for your visit and the temporary file is deleted straight away. Anonymous usage counts (no amounts, symbols or account numbers) help us improve it.",
+    q2: "Why don't my numbers match the IBKR app?",
+    a2: "IBKR shows profit in each stock's own currency and an average cost that ignores round trips. TrueCost converts every trade at that day's rate into your home currency — and checks the total against your account's actual profit.",
+    q3: "Which brokers and currencies are supported?",
+    a3: "Interactive Brokers only, on purpose: one broker, done properly. Any base currency (AUD, USD, EUR, GBP, SGD…), stocks and ETFs in US, European, Nordic and Asian markets.",
+    q4: "Do I need an account?",
+    a4: "No. Download your Activity Statement (CSV) from the IBKR portal, upload it, done. Pro will need an account because it syncs automatically.",
+    q5: "What will Pro need from me?",
+    a5: "A one-time setup of about five minutes: create two Flex Queries and a read-only Flex token in the IBKR portal, then paste them into TrueCost. A Flex token can only read reports — it can't trade or move money.",
+    q6: "Is this tax or investment advice?",
+    a6: "No. TrueCost is a calculator for reviewing your own trading. For your tax return, have a registered tax agent check the figures.",
+    final_title: "See your real numbers in two minutes",
+    final_sub: "Start with the sample account, then drop in your own IBKR statement.",
+    final_cta: "Open TrueCost — it's free",
+    foot_disclaimer: "For information and self-review only. Not tax, financial or investment advice.",
+    foot_app: "Open the app",
+  },
+  zh: {
+    nav_why: "为什么用", nav_calc: "做 T 计算器", nav_who: "适合谁", nav_pricing: "价格", nav_faq: "常见问题",
+    nav_cta: "免费试用",
+    hero_eyebrow: "为盈透证券（IBKR）用户打造 · 支持任何本币",
+    hero_title: "你在 IBKR 赚的钱，是<em>交易赚的</em>，还是汇率给的？",
+    hero_sub: "上传 IBKR 对账单，用你的本币看清：钱到底从哪来、做 T 之后的真实成本、佣金吃掉了多少。",
+    hero_c1: "和账户实际盈亏对到每一分", hero_c2: "做 T 后的真实成本", hero_c3: "每一笔费用摊开看",
+    hero_badge: "免费 · 不用注册 · 不保存你的对账单",
+    hero_cta: "用示例账户试试", hero_cta2: "试试做 T 计算器 ↓",
+    hero_trust: "TrueCost 只读取你上传的对账单，不能下单，也从不碰你的钱。",
+    m_home: "🏠 首页", m_t1: "总览", m_t2: "真实成本", m_t3: "K线图", m_t4: "做T记录", m_t5: "费用", m_t6: "交易风格",
+    m_title: "TrueCost 能发现什么——示例账户", m_note: "👀 虚构的示例账户，用真实行情生成。",
+    m_c1: "💱 钱从哪来", m_trading: "📈 交易", m_fx: "💱 汇率",
+    m_c1_line: "交易是主要来源；汇率另外带来了 A$1,220，券商从不单独显示。",
+    m_c2: "🎯 做 T 之后的真实成本", m_zero: "零成本持股",
+    m_c2_line: "做 T 已经把本金全部赚回，还多赚 US$6,495。IBKR 却仍显示成本 197.85。",
+    m_c3: "💸 交易花了多少钱", m_fees: "佣金与费用",
+    m_c3_line: "共 158 笔订单，平均每笔 A$1.72；按订单大小、市场、月份拆开看。",
+    why_eyebrow: "券商没告诉你的",
+    why_title: "IBKR 回答不了的三个问题",
+    why_sub: "IBKR 按每只股票自己的币种显示盈亏，平均成本也不算做 T 的盈亏。如果你的本币不是美元，你只看到了一半。",
+    p1_t: "是交易赚的，还是汇率给的？",
+    p1_d: "每笔交易按当天汇率换算成本币，再把总盈亏拆成交易和汇率两部分（包括你手里的美元现金）——加起来正好等于账户的实际盈亏。",
+    p2_t: "我的股票到底多少钱买的？",
+    p2_d: "高抛低吸之后，你的真实成本已经降了，IBKR 的平均成本却看不出来。这里能看到摊薄成本、每一轮做 T 的结果，以及哪些已经是零成本持股。",
+    p3_t: "佣金吃掉了多少？",
+    p3_d: "佣金和换汇成本按订单大小、市场、月份拆开看，还能看到多少笔付的是最低佣金、合并下单能省多少。",
+    f1_t: "📊 盈亏拆解", f1_d: "交易、汇率、收入与费用",
+    f2_t: "🎯 真实成本", f2_d: "摊薄成本与零成本持股",
+    f3_t: "🔁 做 T 记录", f3_d: "每一轮先卖后买，赚还是亏",
+    f4_t: "📈 K 线图", f4_d: "2 小时到 5 年，标出你的每笔买卖",
+    f5_t: "💸 费用透视", f5_d: "佣金花在哪、怎么省",
+    f6_t: "🧭 交易风格", f6_d: "胜率、亏损幅度、交易习惯——不荐股",
+    f7_t: "🌏 任何本币", f7_d: "澳元、欧元、英镑、新元……ECB 汇率；澳元可选 RBA",
+    f8_t: "🀄 中文 & English", f8_d: "完整的中英文界面",
+    calc_eyebrow: "不用上传，直接试",
+    calc_title: "做 T 成本计算器",
+    calc_sub: "先买了一批，后来高位卖出一部分、低位再买回来？填进来，对比 IBKR 显示的成本和你真实的成本。",
+    c_shares: "最初买入股数", c_price: "买入价（任何币种）",
+    c_qty: "卖出股数", c_sell: "卖出价", c_buy: "买回价", c_add: "+ 再加一轮",
+    c_now: "现价", c_result: "结果",
+    c_ibkr: "IBKR 显示成本", c_real: "你的真实成本",
+    c_fine: "IBKR 成本按先进先出计算；真实成本 = 仍投在这只股票里的钱 ÷ 持有股数。未计佣金。上传你的对账单可以看到精确数字。",
+    c_cta: "看看你整个账户 →",
+    say_zero: "做 T 已经把本金全部赚回，还多赚 {extra}。你现在手里的股票等于零成本——IBKR 却仍显示成本 {ibkr}。",
+    say_lower: "做 T 让你每股真实成本降低了 {diff}（{pct}）。按现价 {now}，IBKR 显示 {ibkrPct}，你实际是 {realPct}。",
+    say_higher: "这几轮做 T 让每股真实成本升高了 {diff}：卖得比买回的还低。IBKR 显示 {ibkrPct}，你实际是 {realPct}。",
+    say_same: "还没有做 T，两个成本一样。",
+    who_eyebrow: "适合谁", who_title: "选一个最像你的",
+    w1_t: "你经常做 T", w1_d: "在底仓上高抛低吸，一个月可能来回好几次。",
+    w1_a: "知道每一轮是不是真的降低了成本", w1_b: "看看佣金是不是悄悄吃掉了利润",
+    w2_t: "你在美国以外投资", w2_d: "本币是澳元、欧元、英镑、新元……手里却是美股和美元现金。",
+    w2_a: "看清汇率帮你赚了还是亏了多少", w2_b: "用本币算盈亏，每笔交易按当天汇率",
+    w3_t: "你是会计 / 税务代理", w3_d: "报税季总有客户拿着多币种的 IBKR 账户来找你。",
+    w3_a: "规划中：按 RBA 汇率出澳元的客户报告", w3_b: "有兴趣？在网站的「💬 提意见」里告诉我们",
+    not_title: "TrueCost 不做什么",
+    n1_t: "不是券商", n1_d: "你继续在 IBKR 交易。TrueCost 不能下单，也不能转账。",
+    n2_t: "不保存你的对账单", n2_d: "免费版只在本次访问中读取文件，不用注册，什么都不保存。",
+    n3_t: "不提供投资或税务建议", n3_d: "只展示你自己的数字，不荐股；报税数字请让注册税务师核对。",
+    price_eyebrow: "价格", price_title: "已上线的功能全部免费",
+    price_sub: "专业版和年度报告还在开发中，暂时不能购买——欢迎在网站里告诉我们你愿意为什么付费。",
+    s_live: "已上线", s_soon: "🚧 开发中",
+    free_t: "免费版", free_1: "上传 IBKR CSV，支持任何本币", free_2: "交易 vs 汇率拆分",
+    free_3: "真实成本、做 T、费用、交易风格", free_4: "日线、周线 K 线 + 你的买卖点", free_5: "不用注册，不保存数据",
+    free_cta: "免费开始",
+    pro_t: "专业版", pro_unit: "/月（计划）",
+    pro_1: "从 IBKR 自动同步，不用再下载 CSV", pro_2: "当天交易，一键刷新", pro_3: "多年历史自动合并",
+    pro_4: "分钟级 K 线（2H–1M）", pro_5: "AI：问你的账户、每月复盘",
+    rep_t: "年度报告", rep_unit: "一次性（计划）",
+    rep_1: "一整年浓缩成一份本币 PDF", rep_2: "每笔平仓按当天汇率换算", rep_3: "可以直接交给会计师",
+    soon_cta: "加入等候名单",
+    price_note: "等候名单和 30 秒问卷在网站的「🏠 首页」——你的回答决定我们先做什么、定什么价。",
+    faq_title: "常见问题",
+    q1: "上传对账单安全吗？",
+    a1: "免费版从不保存你的文件：只在本次访问的内存里读取，临时文件立即删除。我们只统计匿名使用情况（不记录金额、股票代码或账户号码），用来改进产品。",
+    q2: "为什么和 IBKR App 里的数字不一样？",
+    a2: "IBKR 按每只股票自己的币种显示盈亏，平均成本也不算做 T。TrueCost 把每笔交易按当天汇率换算成你的本币，并且和账户的实际盈亏核对。",
+    q3: "支持哪些券商和币种？",
+    a3: "只支持盈透证券（IBKR），这是故意的：只做一家，做到最好。支持任何基础货币（澳元、美元、欧元、英镑、新元……），美股、欧股、北欧和亚洲市场的股票和 ETF。",
+    q4: "需要注册吗？",
+    a4: "不需要。在 IBKR 网页版下载活动对账单（CSV），上传就行。专业版需要账户，因为它会自动同步。",
+    q5: "专业版需要我做什么设置？",
+    a5: "一次性设置，大约 5 分钟：在 IBKR 网页版建两个 Flex 查询和一个只读的 Flex token，粘贴到 TrueCost。Flex token 只能读取报表，不能下单，也不能转账。",
+    q6: "这算投资或税务建议吗？",
+    a6: "不算。TrueCost 是帮你复盘自己交易的计算工具。报税时请让注册税务师核对数字。",
+    final_title: "两分钟看清你的真实数字",
+    final_sub: "先看看示例账户，再上传你自己的 IBKR 对账单。",
+    final_cta: "打开 TrueCost——免费",
+    foot_disclaimer: "仅供参考和复盘，不构成税务、财务或投资建议。",
+    foot_app: "打开网站",
+  },
+};
+
+const APP = "https://truecost.streamlit.app";
+const forced = new URLSearchParams(location.search).get("theme");  // ?theme=light for screenshots
+if (forced === "light") document.documentElement.dataset.theme = "light";
+let lang = (() => {
+  const q = new URLSearchParams(location.search).get("lang");
+  if (q === "zh" || q === "en") return q;
+  try { const s = localStorage.getItem("tc-lang"); if (s) return s; } catch (e) {}
+  return (navigator.language || "").toLowerCase().startsWith("zh") ? "zh" : "en";
+})();
+
+function fill(s, vars) { return s.replace(/\{(\w+)\}/g, (_, k) => vars[k]); }
+
+function render() {
+  const d = T[lang];
+  document.documentElement.lang = lang === "zh" ? "zh-CN" : "en";
+  document.querySelectorAll("[data-t]").forEach(el => {
+    const v = d[el.dataset.t];
+    if (v === undefined) return;
+    if (el.hasAttribute("data-html")) el.innerHTML = v; else el.textContent = v;
+  });
+  document.querySelectorAll(".app-link").forEach(a => a.href = `${APP}/?lang=${lang}`);
+  document.getElementById("lang").textContent = lang === "zh" ? "English" : "中文";
+  document.title = lang === "zh" ? "TrueCost — 用本币看清你在 IBKR 的真实盈亏" : "TrueCost — your real IBKR profit, in your own currency";
+  calc();
+}
+
+document.getElementById("lang").addEventListener("click", () => {
+  lang = lang === "zh" ? "en" : "zh";
+  try { localStorage.setItem("tc-lang", lang); } catch (e) {}
+  render();
+});
+
+/* ---------- round-trip calculator ---------- */
+const roundsEl = document.getElementById("rounds");
+function addRound(q, s, b) {
+  const row = document.createElement("div");
+  row.className = "round";
+  row.innerHTML = `<input type="number" min="0" step="1" value="${q}" aria-label="shares">
+    <input type="number" min="0" step="0.01" value="${s}" aria-label="sell price">
+    <input type="number" min="0" step="0.01" value="${b}" aria-label="buy-back price">
+    <button class="x" type="button" aria-label="remove">×</button>`;
+  row.querySelector(".x").addEventListener("click", () => { row.remove(); calc(); });
+  row.querySelectorAll("input").forEach(i => i.addEventListener("input", calc));
+  roundsEl.appendChild(row);
+}
+addRound(50, 120, 105);
+addRound(50, 118, 102);
+document.getElementById("add").addEventListener("click", () => { addRound(50, 115, 104); calc(); });
+["n0", "p0", "now"].forEach(id => document.getElementById(id).addEventListener("input", calc));
+
+const num = v => { const x = parseFloat(v); return isFinite(x) ? x : 0; };
+const fmt = v => v.toLocaleString(lang === "zh" ? "zh-CN" : "en-AU", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const pct = v => (v >= 0 ? "+" : "") + (v * 100).toFixed(1) + "%";
+
+function calc() {
+  const d = T[lang];
+  const n0 = Math.max(0, num(document.getElementById("n0").value));
+  const p0 = Math.max(0, num(document.getElementById("p0").value));
+  const now = Math.max(0, num(document.getElementById("now").value));
+  let lots = n0 > 0 ? [{ q: n0, p: p0 }] : [];
+  let cash = n0 * p0;              // money still in the position
+  let rounds = 0;
+  roundsEl.querySelectorAll(".round").forEach(row => {
+    const [q, s, b] = [...row.querySelectorAll("input")].map(i => Math.max(0, num(i.value)));
+    const held = lots.reduce((t, l) => t + l.q, 0);
+    const sell = Math.min(q, held);
+    if (sell <= 0) return;
+    let left = sell;                 // first in, first out
+    while (left > 1e-9 && lots.length) {
+      const take = Math.min(left, lots[0].q);
+      lots[0].q -= take; left -= take;
+      if (lots[0].q <= 1e-9) lots.shift();
+    }
+    lots.push({ q: sell, p: b });
+    cash += sell * (b - s);
+    rounds++;
+  });
+  const shares = lots.reduce((t, l) => t + l.q, 0);
+  const ibkr = shares ? lots.reduce((t, l) => t + l.q * l.p, 0) / shares : 0;
+  const real = shares ? cash / shares : 0;
+
+  document.getElementById("r_ibkr").textContent = fmt(ibkr);
+  document.getElementById("r_real").textContent = real <= 0 ? d.m_zero : fmt(real);
+  const ibkrPct = ibkr > 0 ? pct(now / ibkr - 1) : "—";
+  const realPct = real > 0 ? pct(now / real - 1) : "—";
+  document.getElementById("r_ibkr_pct").textContent = ibkr > 0 ? `${ibkrPct} @ ${fmt(now)}` : "";
+  document.getElementById("r_real_pct").textContent = real > 0 ? `${realPct} @ ${fmt(now)}` : "";
+  const top = Math.max(ibkr, real, 1e-9);
+  document.getElementById("b_ibkr").style.width = `${Math.max(0, ibkr / top) * 100}%`;
+  document.getElementById("b_real").style.width = `${Math.max(0, real / top) * 100}%`;
+
+  let say;
+  if (!rounds || Math.abs(real - ibkr) < 0.005) say = d.say_same;
+  else if (real <= 0) say = fill(d.say_zero, { extra: fmt(-cash), ibkr: fmt(ibkr) });
+  else if (real < ibkr) say = fill(d.say_lower, { diff: fmt(p0 - real), pct: pct(real / p0 - 1), now: fmt(now), ibkrPct, realPct });
+  else say = fill(d.say_higher, { diff: fmt(real - p0), ibkrPct, realPct });
+  document.getElementById("r_say").textContent = say;
+}
+
+/* ---------- motion ---------- */
+const io = "IntersectionObserver" in window ? new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (!e.isIntersecting) return;
+    e.target.classList.add("in");
+    e.target.querySelectorAll(".count").forEach(countUp);
+    io.unobserve(e.target);
+  });
+}, { threshold: 0.12 }) : null;
+document.querySelectorAll(".reveal").forEach(el => io ? io.observe(el) : el.classList.add("in"));
+if (!io) document.querySelectorAll(".count").forEach(c => c.textContent = c.dataset.prefix + Number(c.dataset.to).toLocaleString("en-AU"));
+
+function countUp(el) {
+  const to = Number(el.dataset.to), pre = el.dataset.prefix;
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) { el.textContent = pre + to.toLocaleString("en-AU"); return; }
+  const t0 = performance.now(), dur = 1200;
+  const step = t => {
+    const k = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - k, 3);
+    el.textContent = pre + Math.round(to * e).toLocaleString("en-AU");
+    if (k < 1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+
+render();
+</script>
+</body>
+</html>
