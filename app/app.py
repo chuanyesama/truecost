@@ -23,7 +23,7 @@ sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "app"))
 import analytics  # noqa: E402
 from i18n import Translator, money  # noqa: E402
-from src import costs, flex, prices, report, rounds, style  # noqa: E402
+from src import costs, flex, prices, report, rounds, style, tcalc  # noqa: E402
 
 RAW = ROOT / "data" / "raw"  # your own statements, never committed
 FLEX_CACHE = RAW / "ibkr_flex_sync.csv"
@@ -515,9 +515,9 @@ try:  # the theme switch reloads the page; reopen the tab the viewer was on
     open_tab = tab_names[int(st.query_params.get("tab", 0))]
 except (ValueError, IndexError):
     open_tab = tab_names[0]
-(tab_guide, tab_overview, tab_cost, tab_chart, tab_t, tab_fees, tab_style, tab_fx,
+(tab_guide, tab_overview, tab_cost, tab_chart, tab_t, tab_calc, tab_fees, tab_style, tab_fx,
  tab_trades) = st.tabs(tab_names, default=open_tab)
-TAB = dict(zip(["overview", "cost", "chart", "rounds", "fees", "style", "fx", "trades"], t("tabs")))
+TAB = dict(zip(["overview", "cost", "chart", "rounds", "calc", "fees", "style", "fx", "trades"], t("tabs")))
 
 
 def finding_cards() -> None:
@@ -900,6 +900,155 @@ with tab_t:
                           legend=dict(orientation="h", y=1.12), **CLEAR)
         st.caption(t("timeline_caption"))
         plot(fig)
+
+# ---------- round-trip calculator ----------
+def fee_estimate(sym: str | None, q: float, price: float) -> tuple[float, str]:
+    """Commission per order: from the viewer's own trades in this stock when there are any, else IBKR's fixed rate."""
+    if sym:
+        mine = r.stock_trades[(r.stock_trades["symbol"] == sym) & (r.stock_trades["commission"] < 0)]
+        if len(mine) >= 3:
+            paid = -mine["commission"]
+            per_share = paid.sum() / mine["qty"].abs().sum()
+            return max(paid.min(), per_share * q), "fee_mine"
+    return tcalc.ibkr_fixed_fee(q, price), "fee_ibkr"
+
+
+def plan_calculator() -> None:
+    held = r.holdings[r.holdings["shares"] > 0] if not r.holdings.empty else r.holdings
+    manual = t("tc_manual")
+    syms = (list(held["symbol"]) if not held.empty else []) + [manual]
+    sym = st.selectbox(t("tc_pick"), syms, help=t("tc_pick_help"))
+    row = None if sym == manual else held[held["symbol"] == sym].iloc[0]
+    k = f"tc_{sym}"  # a different stock starts from its own numbers
+    left, right = st.columns([1, 1.15], gap="large")
+    with left:
+        st.markdown(f"**① {t('tc_hold')}**")
+        a, b = st.columns(2)
+        n = a.number_input(t("tc_shares"), min_value=0.0, step=1.0, format="%g", key=k + "_n",
+                           value=float(row.shares) if row is not None else 1000.0)
+        if row is not None:
+            basis = b.radio(t("tc_basis"), ["real", "ibkr"], horizontal=True, key=k + "_basis",
+                            format_func=lambda v: t("tc_basis_" + v))
+            default_c = float(row.diluted_cost if basis == "real" else row.ibkr_avg_cost)
+        else:
+            basis, default_c = None, 100.0
+        c = st.number_input(t("tc_cost"), step=0.01, format="%.2f", key=f"{k}_c_{basis}", value=round(default_c, 2))
+        if row is not None and row.diluted_cost <= 0 and basis == "real":
+            st.caption(t("tc_zero_note"))
+        st.markdown(f"**② {t('tc_sell_title')}**")
+        a, b = st.columns(2)
+        q = a.number_input(t("tc_qty"), min_value=0.0, step=1.0, format="%g", key=k + "_q",
+                           value=float(round(n * 0.3)) if n else 0.0)
+        price_now = r.prices.get(sym) if row is not None else None
+        price_now = float(price_now) if price_now is not None and pd.notna(price_now) else None
+        s = b.number_input(t("tc_sell"), min_value=0.0, step=0.01, format="%.2f", key=k + "_s",
+                           value=round(price_now or (c * 1.1 if c > 0 else 110.0), 2))
+        if price_now:
+            st.caption(t("tc_price_now", price=price_now))
+        st.markdown(f"**③ {t('tc_fee_title')}**")
+        est, how = fee_estimate(None if row is None else sym, q, s)
+        fee_in = st.number_input(t("tc_fee"), min_value=0.0, step=0.01, format="%.2f", value=None,
+                                 key=k + "_fee", placeholder=f"{est:.2f}")
+        st.caption(t(how, fee=est) if fee_in is None else t("tc_fee_own", fees=2 * fee_in))
+    p = tcalc.Plan(shares=n, cost=c, qty=q, sell=s, fee=est if fee_in is None else fee_in)
+    analytics.track_once("app_calc", mode="plan", stock=row is not None)
+    with right, st.container(border=True):
+        if not p.ok:
+            st.info(t("tc_need"))
+            return
+        st.metric(t("tc_be"), f"{p.break_even:,.2f}")
+        st.caption(t("tc_be_say", q=p.qty, s=s, fees=p.fees, be=p.break_even, gap=s - p.break_even,
+                     pct=(p.break_even / s - 1) * 100))
+        bb = st.slider(t("tc_if"), min_value=round(s * 0.8, 2), max_value=round(s * 1.1, 2),
+                       value=round(s * 0.95, 2), step=0.01, format="%.2f", key=f"{k}_bb_{s}")
+        g, nc = p.gain(bb), p.new_cost(bb)
+        m1, m2 = st.columns(2)
+        m1.metric(t("tc_gain"), f"{g:+,.2f}", help=t("tc_gain_help", fees=p.fees))
+        m2.metric(t("tc_newcost"), t("zero_cost") if nc <= 0 else f"{nc:,.2f}",
+                  delta=f"{(nc / c - 1) * 100:+.1f}%" if c > 0 else None, delta_color="inverse")
+        levels = [(0.03, t("tc_up")), (None, t("tc_be_short")), (-0.01, ""), (-0.02, ""), (-0.03, ""),
+                  (-0.05, ""), (-0.08, ""), (-0.1, "")]
+        rows = []
+        for lvl, tag in levels:
+            price = p.break_even if lvl is None else s * (1 + lvl)
+            cost = p.new_cost(price)
+            rows.append({t("tc_th_b"): f"{price:,.2f}" + (f"  ({lvl:+.0%})" if lvl is not None else "") +
+                         (f"  {tag}" if tag else ""),
+                         t("tc_th_gain"): f"{round(p.gain(price), 2) + 0:+,.2f}",  # no "-0.00" at break-even
+                         t("tc_th_cost"): t("zero_cost") if cost <= 0 else f"{cost:,.2f}"})
+        st.markdown(f"**{t('tc_table')}**")
+        st.dataframe(pd.DataFrame(rows), hide_index=True, width="stretch")
+        target = st.number_input(t("tc_target"), step=0.01, format="%.2f", key=f"{k}_tgt_{c}",
+                                 value=round(c * 0.97, 2) if c > 0 else 0.0)
+        need = p.buy_back_for(target)
+        if target >= c:
+            st.write(t("tc_tgt_above", be=p.break_even))
+        elif need <= 0:
+            st.write(t("tc_tgt_no", q=p.qty))
+        else:
+            st.write(md(t("tc_tgt_ok", b=need, pct=(need / s - 1) * 100)))
+        st.warning(t("tc_risk", up=s * 1.05, cost=p.new_cost(s * 1.05), left=n - p.qty))
+        st.caption(t("tc_fine"))
+
+
+REVIEW_PRESETS = {
+    "good": (100, 100, 110, [(50, 120, 105), (50, 118, 102)]),
+    "bad": (100, 100, 100, [(50, 95, 104), (50, 98, 106)]),
+    "zero": (100, 100, 120, [(100, 150, 110), (100, 140, 100), (100, 130, 95)]),
+}
+
+
+def review_calculator() -> None:
+    st.caption(t("tc_review_note", tab=TAB["cost"]))
+    pick = st.pills(t("tc_examples"), list(REVIEW_PRESETS), default="good", format_func=lambda v: t("tc_ex_" + v),
+                    key="tc_example") or "good"
+    n0, p0, now, rds = REVIEW_PRESETS[pick]
+    k = "tcr_" + pick  # picking an example resets the inputs
+    left, right = st.columns([1.4, 1], gap="large")
+    with left:
+        st.markdown(f"**① {t('tc_first')}**")
+        a, b = st.columns(2)
+        n0 = a.number_input(t("tc_bought"), min_value=0.0, value=float(n0), step=1.0, format="%g", key=k + "_n")
+        p0 = b.number_input(t("tc_price"), min_value=0.0, value=float(p0), step=0.01, format="%.2f", key=k + "_p")
+        st.markdown(f"**② {t('tc_rounds')}**")
+        st.caption(t("tc_rounds_hint"))
+        cols = [t("tc_qty"), t("tc_sell"), t("tc_buy")]
+        edited = st.data_editor(pd.DataFrame(rds, columns=cols), num_rows="dynamic", hide_index=True,
+                                width="stretch", key=k + "_rounds",
+                                column_config={c_: st.column_config.NumberColumn(min_value=0.0, format=f)
+                                               for c_, f in zip(cols, ["%.0f", "%.2f", "%.2f"])})
+        st.markdown(f"**③ {t('tc_now')}**")
+        now = st.number_input(t("tc_now"), min_value=0.0, value=float(now), step=0.01, format="%.2f",
+                              key=k + "_now", label_visibility="collapsed")
+    rv = tcalc.review(n0, p0, [tuple(x) for x in edited.fillna(0).to_numpy(dtype=float)])
+    analytics.track_once("app_calc", mode="review")
+    with right, st.container(border=True):
+        m1, m2 = st.columns(2)
+        pct = lambda cost: f"{(now / cost - 1) * 100:+.1f}% @ {now:,.2f}" if cost > 0 else None
+        m1.metric(t("tc_ibkr"), f"{rv.ibkr_cost:,.2f}", delta=pct(rv.ibkr_cost), delta_color="off")
+        m2.metric(t("tc_real"), t("zero_cost") if rv.real_cost <= 0 else f"{rv.real_cost:,.2f}",
+                  delta=pct(rv.real_cost), delta_color="off")
+        if not rv.rounds or abs(rv.real_cost - rv.ibkr_cost) < 0.005:
+            st.info(t("tc_say_same"))
+        elif rv.real_cost <= 0:
+            st.success(t("tc_say_zero", extra=-rv.cash_in, ibkr=rv.ibkr_cost))
+        elif rv.real_cost < rv.ibkr_cost:
+            st.success(t("tc_say_lower", diff=p0 - rv.real_cost, pct=(rv.real_cost / p0 - 1) * 100))
+        else:
+            st.warning(t("tc_say_higher", diff=rv.real_cost - p0))
+        st.caption(t("tc_review_fine"))
+
+
+with tab_calc:
+    st.subheader(t("tc_title"))
+    st.caption(t("tc_caption"))
+    mode = st.segmented_control(t("tc_mode"), ["plan", "review"], default="plan", key="tc_mode",
+                                format_func=lambda v: t("tc_mode_" + v), label_visibility="collapsed") or "plan"
+    if mode == "plan":
+        plan_calculator()
+    else:
+        review_calculator()
+    st.caption(md(t("tc_share")))
 
 # ---------- fees ----------
 with tab_fees:
