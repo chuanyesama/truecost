@@ -126,14 +126,27 @@
   label { display: block; font-size: .85rem; color: var(--muted); font-weight: 500; margin-bottom: 4px; }
   input { width: 100%; font: inherit; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 9px 11px; }
   input:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
-  .rounds { margin-top: 18px; }
-  .rounds-head, .round { display: grid; grid-template-columns: 1fr 1fr 1fr 34px; gap: 8px; align-items: center; }
-  .rounds-head { font-size: .78rem; color: var(--muted); font-weight: 600; margin-bottom: 6px; }
-  .round { margin-bottom: 8px; }
-  .x { border: 0; background: transparent; color: var(--muted); font-size: 1.1rem; cursor: pointer; border-radius: 6px; height: 36px; }
+  .presets { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding-bottom: 14px; border-bottom: 1px solid var(--line); }
+  .presets span { font-size: .9rem; font-weight: 600; margin-right: 2px; }
+  .chip { border: 1px solid var(--line); background: var(--card); color: var(--ink); border-radius: 999px; padding: 6px 13px;
+          font: inherit; font-size: .86rem; cursor: pointer; }
+  .chip:hover { border-color: var(--accent); }
+  .chip.on { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); font-weight: 600; }
+  .step { display: grid; grid-template-columns: 30px 1fr; gap: 12px; padding: 16px 0; border-bottom: 1px dashed var(--line); }
+  .step:last-child { border-bottom: 0; padding-bottom: 0; }
+  .num { width: 28px; height: 28px; border-radius: 50%; background: var(--accent); color: #fff; display: grid; place-items: center;
+         font-weight: 700; font-size: .85rem; }
+  .step h4 { margin: 3px 0 2px; font-size: 1rem; }
+  .hint { margin: 0 0 10px; color: var(--muted); font-size: .86rem; }
+  .round { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px 12px; margin-bottom: 8px; }
+  .round-top { display: flex; justify-content: space-between; align-items: center; font-size: .82rem; font-weight: 700; color: var(--accent); }
+  .round-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .round-grid label { font-size: .76rem; }
+  .x { border: 0; background: transparent; color: var(--muted); font-size: 1.1rem; cursor: pointer; border-radius: 6px; height: 30px; width: 30px; }
   .x:hover { background: var(--bg); color: var(--neg); }
   .add { margin-top: 4px; border: 1px dashed var(--accent); background: transparent; color: var(--accent); font: inherit; font-weight: 600;
          border-radius: 8px; padding: 8px 14px; cursor: pointer; }
+  @media (min-width: 901px) { .result { position: sticky; top: 84px; } }
   .result h3 { font-size: 1rem; color: var(--muted); font-weight: 600; }
   .compare { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 14px 0; }
   .compare div { border-radius: 12px; padding: 14px; background: var(--bg); }
@@ -144,6 +157,15 @@
   .bars { margin: 16px 0 8px; }
   .bar { height: 12px; border-radius: 6px; background: var(--line); position: relative; margin: 6px 0 14px; overflow: hidden; }
   .bar i { position: absolute; inset: 0 auto 0 0; border-radius: 6px; transition: width .4s ease; }
+  .mini { display: none; }
+  @media (max-width: 900px) {
+    .mini { display: flex; position: fixed; left: 12px; right: 12px; bottom: 12px; z-index: 30; justify-content: space-between;
+            gap: 10px; align-items: center; background: var(--ink); color: var(--bg); border-radius: 14px; padding: 12px 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,.25); font-size: .92rem; transform: translateY(140%); transition: transform .3s ease; }
+    .mini.show { transform: none; }
+    .mini b { font-size: 1.05rem; }
+    .mini a { color: var(--bg); font-weight: 600; white-space: nowrap; }
+  }
   .say { background: var(--bg); border-radius: 12px; padding: 14px; font-size: .95rem; }
   .fine { color: var(--muted); font-size: .8rem; margin-top: 10px; }
 
@@ -303,21 +325,39 @@
   <div class="wrap">
     <div class="calc reveal">
       <div class="panel" style="background: var(--bg); box-shadow: none;">
-        <div class="row">
-          <div><label for="n0" data-t="c_shares"></label><input id="n0" type="number" min="1" step="1" value="100"></div>
-          <div><label for="p0" data-t="c_price"></label><input id="p0" type="number" min="0" step="0.01" value="100"></div>
+        <div class="presets">
+          <span data-t="c_try"></span>
+          <button class="chip on" type="button" data-preset="good" data-t="c_p_good"></button>
+          <button class="chip" type="button" data-preset="bad" data-t="c_p_bad"></button>
+          <button class="chip" type="button" data-preset="zero" data-t="c_p_zero"></button>
         </div>
-        <div class="rounds">
-          <div class="rounds-head"><span data-t="c_qty"></span><span data-t="c_sell"></span><span data-t="c_buy"></span><span></span></div>
-          <div id="rounds"></div>
-          <button class="add" id="add" type="button" data-t="c_add"></button>
+        <div class="step">
+          <div class="num">1</div>
+          <div>
+            <h4 data-t="c_s1"></h4><p class="hint" data-t="c_s1_hint"></p>
+            <div class="row">
+              <div><label for="n0" data-t="c_shares"></label><input id="n0" type="number" min="1" step="1" value="100"></div>
+              <div><label for="p0" data-t="c_price"></label><input id="p0" type="number" min="0" step="0.01" value="100"></div>
+            </div>
+          </div>
         </div>
-        <div class="row" style="margin-top:18px">
-          <div><label for="now" data-t="c_now"></label><input id="now" type="number" min="0" step="0.01" value="110"></div>
-          <div></div>
+        <div class="step">
+          <div class="num">2</div>
+          <div>
+            <h4 data-t="c_s2"></h4><p class="hint" data-t="c_s2_hint"></p>
+            <div id="rounds"></div>
+            <button class="add" id="add" type="button" data-t="c_add"></button>
+          </div>
+        </div>
+        <div class="step">
+          <div class="num">3</div>
+          <div>
+            <h4 data-t="c_s3"></h4><p class="hint" data-t="c_s3_hint"></p>
+            <div class="row"><div><input id="now" type="number" min="0" step="0.01" value="110" aria-label="price now"></div><div></div></div>
+          </div>
         </div>
       </div>
-      <div class="panel result" aria-live="polite">
+      <div class="panel result" id="calc-result" aria-live="polite">
         <h3 data-t="c_result"></h3>
         <div class="compare">
           <div><small data-t="c_ibkr"></small><strong id="r_ibkr"></strong><em id="r_ibkr_pct"></em></div>
@@ -419,6 +459,11 @@
   </div>
 </section>
 
+<div class="mini" id="mini" aria-hidden="true">
+  <span>IBKR <b id="mini_ibkr"></b> → <span data-t="mini_real"></span> <b id="mini_real"></b></span>
+  <a href="#calc-result" data-t="mini_see"></a>
+</div>
+
 <footer>
   <div class="wrap">
     <span>© 2026 TrueCost · <span data-t="foot_disclaimer"></span></span>
@@ -466,12 +511,18 @@ const T = {
     calc_eyebrow: "Try it — no upload needed",
     calc_title: "Round-trip calculator",
     calc_sub: "Bought some shares, then sold part of them high and bought back lower? Enter it below and compare the cost IBKR shows with what the shares really cost you.",
-    c_shares: "Shares you first bought", c_price: "Price you paid (any currency)",
+    c_try: "Start with an example:", c_p_good: "Sold high, bought back low", c_p_bad: "Got it backwards",
+    c_p_zero: "Down to zero cost",
+    c_s1: "Your first purchase", c_s1_hint: "How many shares you bought, and what you paid for each (any currency).",
+    c_s2: "Each round trip", c_s2_hint: "You sold some shares, then later bought the same number back. Remove the rounds you didn't do.",
+    c_s3: "Today's price", c_s3_hint: "Used to work out how far up or down you are.",
+    c_round: "Round {n}",
+    c_shares: "Shares", c_price: "Price per share",
     c_qty: "Shares sold", c_sell: "Sold at", c_buy: "Bought back at", c_add: "+ Add a round",
     c_now: "Price now", c_result: "Your result",
     c_ibkr: "Cost IBKR shows", c_real: "Your real cost",
     c_fine: "IBKR's cost assumes first-in, first-out lots; the real cost is the money still in the position ÷ shares held. Fees ignored. Your own statement gives the exact figures.",
-    c_cta: "See it for your whole account →",
+    c_cta: "See it for your whole account →", mini_see: "Details ↓", mini_real: "real",
     say_zero: "Your round trips have already paid back the whole position, plus {extra}. The shares you hold now cost you nothing — but IBKR still shows {ibkr}.",
     say_lower: "Your round trips lowered your real cost by {diff} a share ({pct}). At {now}, IBKR shows {ibkrPct} — you're actually {realPct}.",
     say_higher: "These round trips raised your real cost by {diff} a share: you sold lower than you bought back. IBKR shows {ibkrPct}; you're actually {realPct}.",
@@ -557,12 +608,17 @@ const T = {
     calc_eyebrow: "不用上传，直接试",
     calc_title: "做 T 成本计算器",
     calc_sub: "先买了一批，后来高位卖出一部分、低位再买回来？填进来，对比 IBKR 显示的成本和你真实的成本。",
-    c_shares: "最初买入股数", c_price: "买入价（任何币种）",
+    c_try: "先点一个例子看看：", c_p_good: "高抛低吸成功", c_p_bad: "做 T 做反了", c_p_zero: "做到零成本",
+    c_s1: "最初买入", c_s1_hint: "你第一次买了多少股、每股多少钱（任何币种都行）。",
+    c_s2: "每一轮做 T", c_s2_hint: "先卖出一部分，之后再买回同样的股数。没做过的轮次点 × 删掉。",
+    c_s3: "现在的股价", c_s3_hint: "用来算你现在赚了还是亏了多少。",
+    c_round: "第 {n} 轮",
+    c_shares: "股数", c_price: "每股价格",
     c_qty: "卖出股数", c_sell: "卖出价", c_buy: "买回价", c_add: "+ 再加一轮",
     c_now: "现价", c_result: "结果",
     c_ibkr: "IBKR 显示成本", c_real: "你的真实成本",
     c_fine: "IBKR 成本按先进先出计算；真实成本 = 仍投在这只股票里的钱 ÷ 持有股数。未计佣金。上传你的对账单可以看到精确数字。",
-    c_cta: "看看你整个账户 →",
+    c_cta: "看看你整个账户 →", mini_see: "看详情 ↓", mini_real: "真实",
     say_zero: "做 T 已经把本金全部赚回，还多赚 {extra}。你现在手里的股票等于零成本——IBKR 却仍显示成本 {ibkr}。",
     say_lower: "做 T 让你每股真实成本降低了 {diff}（{pct}）。按现价 {now}，IBKR 显示 {ibkrPct}，你实际是 {realPct}。",
     say_higher: "这几轮做 T 让每股真实成本升高了 {diff}：卖得比买回的还低。IBKR 显示 {ibkrPct}，你实际是 {realPct}。",
@@ -647,20 +703,42 @@ document.getElementById("lang").addEventListener("click", () => {
 /* ---------- round-trip calculator ---------- */
 const roundsEl = document.getElementById("rounds");
 function addRound(q, s, b) {
+  const d = T[lang];
   const row = document.createElement("div");
   row.className = "round";
-  row.innerHTML = `<input type="number" min="0" step="1" value="${q}" aria-label="shares">
-    <input type="number" min="0" step="0.01" value="${s}" aria-label="sell price">
-    <input type="number" min="0" step="0.01" value="${b}" aria-label="buy-back price">
-    <button class="x" type="button" aria-label="remove">×</button>`;
-  row.querySelector(".x").addEventListener("click", () => { row.remove(); calc(); });
-  row.querySelectorAll("input").forEach(i => i.addEventListener("input", calc));
+  row.innerHTML = `<div class="round-top"><span class="round-n"></span>
+      <button class="x" type="button" aria-label="remove">×</button></div>
+    <div class="round-grid">
+      <div><label data-t="c_qty">${d.c_qty}</label><input type="number" min="0" step="1" value="${q}"></div>
+      <div><label data-t="c_sell">${d.c_sell}</label><input type="number" min="0" step="0.01" value="${s}"></div>
+      <div><label data-t="c_buy">${d.c_buy}</label><input type="number" min="0" step="0.01" value="${b}"></div>
+    </div>`;
+  row.querySelector(".x").addEventListener("click", () => { row.remove(); unpick(); calc(); });
+  row.querySelectorAll("input").forEach(i => i.addEventListener("input", () => { unpick(); calc(); }));
   roundsEl.appendChild(row);
 }
-addRound(50, 120, 105);
-addRound(50, 118, 102);
-document.getElementById("add").addEventListener("click", () => { addRound(50, 115, 104); calc(); });
-["n0", "p0", "now"].forEach(id => document.getElementById(id).addEventListener("input", calc));
+
+// examples a newcomer can click before typing anything
+const PRESETS = {
+  good: { n0: 100, p0: 100, now: 110, rounds: [[50, 120, 105], [50, 118, 102]] },
+  bad:  { n0: 100, p0: 100, now: 100, rounds: [[50, 95, 104], [50, 98, 106]] },
+  zero: { n0: 100, p0: 100, now: 120, rounds: [[100, 150, 110], [100, 140, 100], [100, 130, 95]] },
+};
+function usePreset(key) {
+  const p = PRESETS[key];
+  document.getElementById("n0").value = p.n0;
+  document.getElementById("p0").value = p.p0;
+  document.getElementById("now").value = p.now;
+  roundsEl.innerHTML = "";
+  p.rounds.forEach(r => addRound(...r));
+  document.querySelectorAll(".chip").forEach(c => c.classList.toggle("on", c.dataset.preset === key));
+  calc();
+}
+function unpick() { document.querySelectorAll(".chip").forEach(c => c.classList.remove("on")); }
+document.querySelectorAll(".chip").forEach(c => c.addEventListener("click", () => usePreset(c.dataset.preset)));
+PRESETS.good.rounds.forEach(r => addRound(...r));
+document.getElementById("add").addEventListener("click", () => { addRound(50, 115, 104); unpick(); calc(); });
+["n0", "p0", "now"].forEach(id => document.getElementById(id).addEventListener("input", () => { unpick(); calc(); }));
 
 const num = v => { const x = parseFloat(v); return isFinite(x) ? x : 0; };
 const fmt = v => v.toLocaleString(lang === "zh" ? "zh-CN" : "en-AU", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -674,6 +752,7 @@ function calc() {
   let lots = n0 > 0 ? [{ q: n0, p: p0 }] : [];
   let cash = n0 * p0;              // money still in the position
   let rounds = 0;
+  roundsEl.querySelectorAll(".round-n").forEach((el, i) => el.textContent = fill(d.c_round, { n: i + 1 }));
   roundsEl.querySelectorAll(".round").forEach(row => {
     const [q, s, b] = [...row.querySelectorAll("input")].map(i => Math.max(0, num(i.value)));
     const held = lots.reduce((t, l) => t + l.q, 0);
@@ -694,7 +773,11 @@ function calc() {
   const real = shares ? cash / shares : 0;
 
   document.getElementById("r_ibkr").textContent = fmt(ibkr);
-  document.getElementById("r_real").textContent = real <= 0 ? d.m_zero : fmt(real);
+  const rr = document.getElementById("r_real");
+  rr.textContent = real <= 0 ? d.m_zero : fmt(real);
+  rr.style.fontSize = real <= 0 ? "1.3rem" : "";
+  document.getElementById("mini_ibkr").textContent = fmt(ibkr);
+  document.getElementById("mini_real").textContent = real <= 0 ? d.m_zero : fmt(real);
   const ibkrPct = ibkr > 0 ? pct(now / ibkr - 1) : "—";
   const realPct = real > 0 ? pct(now / real - 1) : "—";
   document.getElementById("r_ibkr_pct").textContent = ibkr > 0 ? `${ibkrPct} @ ${fmt(now)}` : "";
@@ -709,6 +792,18 @@ function calc() {
   else if (real < ibkr) say = fill(d.say_lower, { diff: fmt(p0 - real), pct: pct(real / p0 - 1), now: fmt(now), ibkrPct, realPct });
   else say = fill(d.say_higher, { diff: fmt(real - p0), ibkrPct, realPct });
   document.getElementById("r_say").textContent = say;
+}
+
+// phones: show the mini result bar while the inputs are on screen and the full result isn't
+if ("IntersectionObserver" in window) {
+  const mini = document.getElementById("mini");
+  const seen = { inputs: false, result: false };
+  const update = () => mini.classList.toggle("show", seen.inputs && !seen.result);
+  new IntersectionObserver(es => es.forEach(e => {
+    seen[e.target.id === "calc-result" ? "result" : "inputs"] = e.isIntersecting; update();
+  }), { threshold: 0.05 }).observe(document.querySelector(".calc .panel"));
+  new IntersectionObserver(es => es.forEach(e => { seen.result = e.intersectionRatio > 0.4; update(); }),
+    { threshold: [0, 0.4, 1] }).observe(document.getElementById("calc-result"));
 }
 
 /* ---------- motion ---------- */
