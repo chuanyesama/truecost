@@ -1,0 +1,413 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>做 T 计算器：保本买回价、做 T 后真实成本 | TrueCost</title>
+<meta name="description" content="免费做 T 计算器：卖出前算好保本买回价、买回后的新成本和佣金；做完后对比 IBKR 显示的成本和你的真实摊薄成本。Free round-trip calculator: break-even buy-back price and real cost after trading around a position.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%234f46e5'/><text x='50' y='68' font-size='54' font-family='Arial' font-weight='700' fill='white' text-anchor='middle'>T</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+  .top { background: var(--hero); padding: 48px 0 28px; }
+  .top h1 { font-size: clamp(1.9rem, 4.6vw, 2.8rem); font-weight: 800; margin-top: 10px; }
+  .top .lead { margin: 12px auto 0; }
+  .modes { display: inline-flex; gap: 4px; margin-top: 26px; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 5px; }
+  .modes button { border: 0; background: transparent; color: var(--muted); font: inherit; font-weight: 600; font-size: .95rem;
+                  border-radius: 10px; padding: 10px 18px; cursor: pointer; }
+  .modes button.on { background: var(--accent); color: #fff; }
+  @media (max-width: 520px) { .modes { display: flex; } .modes button { flex: 1; padding: 10px 8px; font-size: .88rem; } }
+  main section { padding: 32px 0 72px; }
+  .calc { margin-top: 0; }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .big { font-size: 2.3rem; font-weight: 800; letter-spacing: -0.03em; line-height: 1.15; }
+  .big small { font-size: 1rem; font-weight: 600; color: var(--muted); margin-left: 6px; }
+  .kpi { background: var(--accent-soft); border-radius: 12px; padding: 16px; margin: 12px 0 18px; }
+  .kpi p { margin: 4px 0 0; color: var(--muted); font-size: .9rem; }
+  .slider-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  .slider-head input { width: 120px; }
+  input[type=range] { padding: 0; border: 0; background: transparent; accent-color: var(--accent); margin: 10px 0 4px; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 10px 0 16px; }
+  .two div { background: var(--bg); border-radius: 12px; padding: 12px 14px; }
+  .two small { color: var(--muted); font-weight: 600; font-size: .8rem; display: block; }
+  .two strong { font-size: 1.35rem; letter-spacing: -0.02em; }
+  .two em { display: block; font-style: normal; font-size: .84rem; color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; font-size: .92rem; margin-top: 6px; }
+  th { text-align: right; color: var(--muted); font-weight: 600; font-size: .8rem; padding: 6px 8px; border-bottom: 1px solid var(--line); }
+  td { text-align: right; padding: 8px; border-bottom: 1px dashed var(--line); font-variant-numeric: tabular-nums; }
+  th:first-child, td:first-child { text-align: left; }
+  tbody tr { cursor: pointer; } tbody tr:hover { background: var(--bg); }
+  tbody tr.sel { background: var(--accent-soft); }
+  .tag { font-size: .75rem; color: var(--muted); margin-left: 6px; }
+  .target { display: grid; grid-template-columns: auto 1fr; gap: 10px 14px; align-items: center; margin-top: 8px; }
+  .target input { max-width: 140px; }
+  .warn { border-left: 3px solid var(--neg); padding: 4px 0 4px 14px; color: var(--muted); font-size: .9rem; margin-top: 16px; }
+  h3.sub { font-size: .95rem; margin: 22px 0 4px; }
+  .hidden { display: none !important; }
+  .end { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 28px; text-align: center; box-shadow: var(--shadow); }
+  .end h2 { font-size: 1.5rem; } .end p { color: var(--muted); margin: 10px auto 20px; max-width: 40rem; }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <a class="logo" href="./"><i>T</i>TrueCost</a>
+    <div class="links">
+      <a href="./" data-t="nav_home"></a>
+    </div>
+    <div class="nav-right">
+      <button class="lang" id="lang" type="button" aria-label="Language">中文</button>
+      <a class="btn btn-primary btn-sm app-link" href="https://truecost.streamlit.app" data-where="nav" data-t="nav_cta"></a>
+    </div>
+  </div>
+</nav>
+
+<header class="top">
+  <div class="wrap center">
+    <div class="eyebrow" data-t="eyebrow"></div>
+    <h1 data-t="title"></h1>
+    <p class="lead" data-t="sub"></p>
+    <div class="modes" role="tablist">
+      <button type="button" role="tab" data-mode="plan" data-t="mode_plan"></button>
+      <button type="button" role="tab" data-mode="review" data-t="mode_review"></button>
+    </div>
+  </div>
+</header>
+
+<main>
+<!-- before the trade: break-even buy-back price -->
+<section id="plan">
+  <div class="wrap">
+    <div class="calc">
+      <div class="panel" style="background: var(--bg); box-shadow: none;">
+        <div class="step" style="padding-top:0">
+          <div class="num">1</div>
+          <div>
+            <h4 data-t="p_s1"></h4><p class="hint" data-t="p_s1_hint"></p>
+            <div class="field-row">
+              <div><label for="h_n" data-t="p_shares"></label><input id="h_n" type="number" min="1" step="1" value="1000"></div>
+              <div><label for="h_c" data-t="p_cost"></label><input id="h_c" type="number" min="0" step="0.01" value="100"></div>
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="num">2</div>
+          <div>
+            <h4 data-t="p_s2"></h4><p class="hint" data-t="p_s2_hint"></p>
+            <div class="field-row">
+              <div><label for="s_q" data-t="p_qty"></label><input id="s_q" type="number" min="1" step="1" value="300"></div>
+              <div><label for="s_p" data-t="p_sell"></label><input id="s_p" type="number" min="0" step="0.01" value="110"></div>
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="num">3</div>
+          <div>
+            <h4 data-t="p_s3"></h4><p class="hint" id="fee_hint"></p>
+            <div class="field-row"><div><input id="fee" type="number" min="0" step="0.01" aria-label="fee per order"></div><div></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel result" aria-live="polite">
+        <h3 data-t="p_be"></h3>
+        <div class="kpi">
+          <div class="big" id="be"></div>
+          <p id="be_say"></p>
+        </div>
+
+        <div class="slider-head">
+          <h3 class="sub" style="margin:0" data-t="p_if"></h3>
+          <input id="b_in" type="number" min="0" step="0.01" aria-label="buy-back price">
+        </div>
+        <input id="b_rng" type="range" step="0.01" aria-label="buy-back price">
+        <div class="two">
+          <div><small data-t="p_gain"></small><strong id="gain"></strong><em id="gain_pct"></em></div>
+          <div><small data-t="p_newcost"></small><strong id="newcost"></strong><em id="newcost_pct"></em></div>
+        </div>
+
+        <h3 class="sub" data-t="p_table"></h3>
+        <table>
+          <thead><tr><th data-t="p_th_b"></th><th data-t="p_th_gain"></th><th data-t="p_th_cost"></th></tr></thead>
+          <tbody id="rows"></tbody>
+        </table>
+
+        <h3 class="sub" data-t="p_target"></h3>
+        <div class="target">
+          <input id="tgt" type="number" min="0" step="0.01" aria-label="target cost">
+          <span id="tgt_say"></span>
+        </div>
+
+        <div class="warn" id="risk"></div>
+        <div class="fine" data-t="p_fine"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- after the trade: the same round-trip calculator as the home page -->
+<section id="review" class="hidden">
+  <div class="wrap">
+    <div class="calc">
+      <div class="panel" style="background: var(--bg); box-shadow: none;">
+        <div class="presets">
+          <span data-t="c_try"></span>
+          <button class="chip on" type="button" data-preset="good" data-t="c_p_good"></button>
+          <button class="chip" type="button" data-preset="bad" data-t="c_p_bad"></button>
+          <button class="chip" type="button" data-preset="zero" data-t="c_p_zero"></button>
+        </div>
+        <div class="step">
+          <div class="num">1</div>
+          <div>
+            <h4 data-t="c_s1"></h4><p class="hint" data-t="c_s1_hint"></p>
+            <div class="row">
+              <div><label for="n0" data-t="c_shares"></label><input id="n0" type="number" min="1" step="1" value="100"></div>
+              <div><label for="p0" data-t="c_price"></label><input id="p0" type="number" min="0" step="0.01" value="100"></div>
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="num">2</div>
+          <div>
+            <h4 data-t="c_s2"></h4><p class="hint" data-t="c_s2_hint"></p>
+            <div id="rounds"></div>
+            <button class="add" id="add" type="button" data-t="c_add"></button>
+          </div>
+        </div>
+        <div class="step">
+          <div class="num">3</div>
+          <div>
+            <h4 data-t="c_s3"></h4><p class="hint" data-t="c_s3_hint"></p>
+            <div class="row"><div><input id="now" type="number" min="0" step="0.01" value="110" aria-label="price now"></div><div></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="panel result" id="calc-result" aria-live="polite">
+        <h3 data-t="c_result"></h3>
+        <div class="compare">
+          <div><small data-t="c_ibkr"></small><strong id="r_ibkr"></strong><em id="r_ibkr_pct"></em></div>
+          <div class="real"><small data-t="c_real"></small><strong id="r_real"></strong><em id="r_real_pct"></em></div>
+        </div>
+        <div class="bars">
+          <label data-t="c_ibkr"></label><div class="bar"><i id="b_ibkr" style="background: var(--muted)"></i></div>
+          <label data-t="c_real"></label><div class="bar"><i id="b_real" style="background: var(--accent)"></i></div>
+        </div>
+        <div class="say" id="r_say"></div>
+        <div class="fine" data-t="c_fine"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section style="padding-top:0">
+  <div class="wrap">
+    <div class="end">
+      <h2 data-t="end_title"></h2>
+      <p data-t="end_sub"></p>
+      <a class="btn btn-primary app-link" href="https://truecost.streamlit.app" data-where="calc_page_end" data-t="end_cta"></a>
+    </div>
+  </div>
+</section>
+</main>
+
+<div class="mini" id="mini" aria-hidden="true">
+  <span>IBKR <b id="mini_ibkr"></b> → <span data-t="mini_real"></span> <b id="mini_real"></b></span>
+  <a href="#calc-result" data-t="mini_see"></a>
+</div>
+
+<footer>
+  <div class="wrap">
+    <span>© TrueCost · <span data-t="foot"></span></span>
+    <span><a href="./" data-t="nav_home"></a> · <a href="https://github.com/chuanyesama/truecost">GitHub</a></span>
+  </div>
+</footer>
+
+<script src="track.js"></script>
+<script src="review.js"></script>
+<script>
+const T = {
+  en: {
+    nav_home: "← TrueCost home", nav_cta: "Try TrueCost free",
+    eyebrow: "Free · no sign-up · works for any stock",
+    title: "Round-trip calculator",
+    sub: "Before you sell: find the buy-back price that actually lowers your cost after fees. After you've traded: see your real cost next to the one IBKR shows.",
+    mode_plan: "Before: buy-back price", mode_review: "After: real cost",
+    p_s1: "What you hold now", p_s1_hint: "Your shares and your cost per share — IBKR's figure or your own, any currency.",
+    p_shares: "Shares", p_cost: "Cost per share",
+    p_s2: "What you plan to sell", p_s2_hint: "How many shares you'll sell, and at what price.",
+    p_qty: "Shares to sell", p_sell: "Sell price",
+    p_s3: "Commission per order",
+    fee_auto: "Leave empty to estimate IBKR's US fixed rate: {fee} an order (0.005 a share, min 1). A round trip is two orders.",
+    fee_own: "A round trip is two orders: {fee} in total.",
+    p_be: "Buy back below this to come out ahead",
+    be_say: "Selling {q} at {s} and paying {fees} in commission, you need to buy back below {be} — {gap} ({gapPct}) under your sell price.",
+    be_none: "Enter the shares and price you plan to sell.",
+    p_if: "If you buy back at", p_gain: "This round", p_newcost: "Your new cost",
+    gain_pct: "after {fees} commission", cost_pct: "{diff} vs {c} now",
+    p_table: "At different buy-back prices", p_th_b: "Buy back at", p_th_gain: "This round", p_th_cost: "New cost",
+    t_up: "price rose", t_be: "break-even",
+    p_target: "Want your cost down to…",
+    tgt_ok: "Buy back at {b} or lower ({pct} vs your sell price).",
+    tgt_no: "Not possible in one round with {q} shares — sell more, or plan several rounds.",
+    tgt_above: "That's above your current cost — any buy-back under {be} already gets you there.",
+    risk: "If the price keeps rising instead: buying back at {up} (+5%) lifts your cost to {cost}. Not buying back leaves you with {left} shares.",
+    p_fine: "Real cost = money still in the position ÷ shares held. Ignores taxes and currency. A calculator, not advice on whether to trade.",
+    end_title: "Want this worked out for every round you've done?",
+    end_sub: "Upload your IBKR statement and TrueCost finds every round trip, your real cost per stock, and what fees took — in your home currency.",
+    end_cta: "Try it with your statement — free",
+    foot: "For calculation only. Not financial or investment advice.",
+  },
+  zh: {
+    nav_home: "← TrueCost 首页", nav_cta: "免费试用 TrueCost",
+    eyebrow: "免费 · 不用注册 · 任何股票都能用",
+    title: "做 T 计算器",
+    sub: "卖出之前：算好扣掉佣金后，买回价要低于多少才真正降成本。做完之后：对比 IBKR 显示的成本和你的真实成本。",
+    mode_plan: "做 T 前：算买回价", mode_review: "做完后：算真实成本",
+    p_s1: "现在的持仓", p_s1_hint: "持有股数和每股成本，用 IBKR 显示的或你自己算的都行，任何币种。",
+    p_shares: "持有股数", p_cost: "每股成本",
+    p_s2: "这次打算卖出", p_s2_hint: "准备卖多少股、卖什么价。",
+    p_qty: "卖出股数", p_sell: "卖出价",
+    p_s3: "每笔佣金",
+    fee_auto: "留空则按 IBKR 美股固定佣金估算：每笔 {fee}（每股 0.005，最低 1）。一卖一买共两笔。",
+    fee_own: "一卖一买共两笔，合计 {fee}。",
+    p_be: "买回价低于这个数才不亏",
+    be_say: "在 {s} 卖出 {q} 股、佣金共 {fees}，买回价要低于 {be}，也就是比卖出价低 {gap}（{gapPct}）。",
+    be_none: "先填打算卖出的股数和价格。",
+    p_if: "如果买回价是", p_gain: "这一轮", p_newcost: "买回后的新成本",
+    gain_pct: "已扣佣金 {fees}", cost_pct: "比现在的 {c} {diff}",
+    p_table: "不同买回价的结果", p_th_b: "买回价", p_th_gain: "这一轮", p_th_cost: "新成本",
+    t_up: "涨了才买回", t_be: "保本",
+    p_target: "想把成本降到……",
+    tgt_ok: "买回价要在 {b} 或以下（比卖出价 {pct}）。",
+    tgt_no: "卖 {q} 股做一轮做不到——多卖一些，或者分几轮。",
+    tgt_above: "这比现在的成本还高——只要在 {be} 以下买回就已经达到了。",
+    risk: "如果卖了之后股价继续涨：在 {up}（+5%）买回，成本会升到 {cost}；不买回的话，你手里只剩 {left} 股。",
+    p_fine: "真实成本 = 仍投在这只股票里的钱 ÷ 持有股数。未计税和汇率。这只是计算工具，不建议你是否交易。",
+    end_title: "想把你做过的每一轮都算清楚？",
+    end_sub: "上传 IBKR 对账单，TrueCost 自动找出每一轮做 T、每只股票的真实成本和佣金，全部换算成你的本币。",
+    end_cta: "上传对账单试试——免费",
+    foot: "仅供计算参考，不构成财务或投资建议。",
+  },
+};
+for (const l of ["en", "zh"]) Object.assign(T[l], CT[l]);
+
+const APP = "https://truecost.streamlit.app";
+let lang = (() => {
+  const q = new URLSearchParams(location.search).get("lang");
+  if (q === "zh" || q === "en") return q;
+  try { const s = localStorage.getItem("tc-lang"); if (s) return s; } catch (e) {}
+  return (navigator.language || "").toLowerCase().startsWith("zh") ? "zh" : "en";
+})();
+function fill(s, vars) { return s.replace(/\{(\w+)\}/g, (_, k) => vars[k]); }
+const $ = id => document.getElementById(id);
+const signed = v => (v >= 0 ? "+" : "−") + fmt(Math.abs(v));
+
+/* ---------- before the trade ---------- */
+let buyBack = null;       // null = follow the default (5% under the sell price)
+function ibkrFee(q, price) { return Math.min(Math.max(1, 0.005 * q), 0.01 * q * price); }
+
+function plan() {
+  const d = T[lang];
+  const n = Math.max(0, num($("h_n").value)), c = Math.max(0, num($("h_c").value));
+  const q = Math.min(Math.max(0, num($("s_q").value)), n), s = Math.max(0, num($("s_p").value));
+  const own = $("fee").value.trim() !== "";
+  const fee = own ? Math.max(0, num($("fee").value)) : ibkrFee(q, s);
+  const fees = 2 * fee;
+  $("fee").placeholder = fmt(fee);
+  $("fee_hint").textContent = fill(own ? d.fee_own : d.fee_auto, { fee: fmt(own ? fees : fee) });
+  if (!q || !s || !n) {
+    $("be").textContent = "—"; $("be_say").textContent = d.be_none; return;
+  }
+  // a round trip of q shares sold at s and bought back at b moves q·(s−b) − fees out of the position
+  const gainAt = b => q * (s - b) - fees;
+  const costAt = b => (n * c - gainAt(b)) / n;
+  const be = s - fees / q;
+  $("be").textContent = fmt(be);
+  $("be_say").textContent = fill(d.be_say, { q: q.toLocaleString(), s: fmt(s), fees: fmt(fees), be: fmt(be),
+                                              gap: fmt(s - be), gapPct: ((be / s - 1) * 100).toFixed(2) + "%" });
+
+  const lo = +(s * 0.8).toFixed(2), hi = +(s * 1.1).toFixed(2);
+  if (buyBack === null) buyBack = +(s * 0.95).toFixed(2);
+  const rng = $("b_rng");
+  rng.min = lo; rng.max = hi; rng.value = Math.min(Math.max(buyBack, lo), hi);
+  if (document.activeElement !== $("b_in")) $("b_in").value = buyBack.toFixed(2);
+  const g = gainAt(buyBack), nc = costAt(buyBack);
+  $("gain").textContent = signed(g);
+  $("gain").className = g >= 0 ? "pos" : "neg";
+  $("gain_pct").textContent = fill(d.gain_pct, { fees: fmt(fees) });
+  $("newcost").textContent = nc <= 0 ? d.c_zero : fmt(nc);
+  $("newcost").className = nc < c ? "pos" : nc > c ? "neg" : "";
+  $("newcost_pct").textContent = fill(d.cost_pct, { c: fmt(c), diff: c ? pct(nc / c - 1) : "—" });
+
+  const levels = [[0.03, d.t_up], [null, d.t_be], [-0.01], [-0.02], [-0.03], [-0.05], [-0.08], [-0.1]];
+  $("rows").innerHTML = levels.map(([k, tag]) => {
+    const b = k === null ? be : s * (1 + k);
+    const gg = gainAt(b), cc = costAt(b);
+    const label = k === null ? "" : ` <span class="tag">${pct(k)}</span>`;
+    const sel = Math.abs(b - buyBack) < 0.005 ? ' class="sel"' : "";
+    return `<tr data-b="${b.toFixed(2)}"${sel}><td>${fmt(b)}${label}${tag ? ` <span class="tag">${tag}</span>` : ""}</td>
+      <td class="${gg >= 0 ? "pos" : "neg"}">${signed(gg)}</td><td>${cc <= 0 ? d.c_zero : fmt(cc)}</td></tr>`;
+  }).join("");
+
+  // target cost → the highest buy-back price that reaches it
+  if (document.activeElement !== $("tgt") && !$("tgt").dataset.touched) $("tgt").value = (c * 0.97).toFixed(2);
+  const t = num($("tgt").value);
+  const bt = s - (n * (c - t) + fees) / q;
+  $("tgt_say").textContent = t >= c ? fill(d.tgt_above, { be: fmt(be) })
+    : bt <= 0 ? fill(d.tgt_no, { q: q.toLocaleString() })
+    : fill(d.tgt_ok, { b: fmt(bt), pct: pct(bt / s - 1) });
+
+  $("risk").textContent = fill(d.risk, { up: fmt(s * 1.05), cost: fmt(costAt(s * 1.05)), left: (n - q).toLocaleString() });
+}
+
+function planEdited() { plan(); tcTrack("calc_use", { mode: "plan" }, true); }
+["h_n", "h_c", "s_q", "s_p", "fee"].forEach(id => $(id).addEventListener("input", () => {
+  if (id === "s_p") buyBack = null;    // a new sell price resets the buy-back to 5% under it
+  planEdited();
+}));
+$("b_rng").addEventListener("input", e => { buyBack = num(e.target.value); planEdited(); });
+$("b_in").addEventListener("input", e => { buyBack = num(e.target.value); planEdited(); });
+$("tgt").addEventListener("input", () => { $("tgt").dataset.touched = "1"; planEdited(); });
+$("rows").addEventListener("click", e => {
+  const tr = e.target.closest("tr"); if (!tr) return;
+  buyBack = num(tr.dataset.b); $("b_in").value = tr.dataset.b; planEdited();
+});
+
+/* ---------- modes, language ---------- */
+function setMode(m, track) {
+  $("plan").classList.toggle("hidden", m !== "plan");
+  $("review").classList.toggle("hidden", m !== "review");
+  document.querySelectorAll("[data-mode]").forEach(b => {
+    b.classList.toggle("on", b.dataset.mode === m); b.setAttribute("aria-selected", b.dataset.mode === m);
+  });
+  history.replaceState(null, "", "#" + m);
+  if (track) tcTrack("calc_mode", { mode: m });
+}
+document.querySelectorAll("[data-mode]").forEach(b => b.addEventListener("click", () => setMode(b.dataset.mode, true)));
+
+function render() {
+  const d = T[lang];
+  document.documentElement.lang = lang === "zh" ? "zh-CN" : "en";
+  document.querySelectorAll("[data-t]").forEach(el => { const v = d[el.dataset.t]; if (v !== undefined) el.textContent = v; });
+  document.querySelectorAll(".app-link").forEach(a => a.href = `${APP}/?lang=${lang}&src=calculator`);
+  $("lang").textContent = lang === "zh" ? "English" : "中文";
+  document.title = lang === "zh" ? "做 T 计算器：保本买回价、做 T 后真实成本 | TrueCost"
+                                 : "Round-trip calculator: break-even buy-back price & real cost | TrueCost";
+  plan(); calc();
+}
+$("lang").addEventListener("click", () => {
+  lang = lang === "zh" ? "en" : "zh";
+  try { localStorage.setItem("tc-lang", lang); } catch (e) {}
+  render();
+  tcTrack("lang_switch", { to: lang });
+});
+
+initReview();
+setMode(location.hash === "#review" ? "review" : "plan", false);
+render();
+</script>
+</body>
+</html>

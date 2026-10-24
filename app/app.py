@@ -368,7 +368,7 @@ elif LOCAL_FILES:
 else:
     raw, demo = DEMO.read_bytes(), True
 
-analytics.track_once("app_open", lang=lang, demo=demo)
+analytics.track_once("app_open", lang=lang, demo=demo, src=st.query_params.get("src", ""))
 
 try:
     with st.spinner(t("parsing")):
