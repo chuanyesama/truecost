@@ -86,14 +86,64 @@ def padded_range(values, pad: float = 0.18) -> list[float]:
 METHODS = {"lot_ibkr": None, "lot_fifo": "FIFO", "lot_lifo": "LIFO", "lot_hifo": "HIFO"}
 
 st.set_page_config(page_title="TrueCost", page_icon="💱", layout="wide")
-# larger base text in both light and dark themes (Streamlit sizes everything in rem)
-st.markdown("""<style>
-  html { font-size: 18px; }
-  /* wider sidebar (desktop); Streamlit keeps it as an overlay on phones */
-  @media (min-width: 900px) {
-    section[data-testid="stSidebar"] { width: 360px !important; min-width: 360px !important; }
-  }
+# colours, font and size live in .streamlit/config.toml; this adds what the theme can't
+_dark = (st.context.theme.type or "light") == "dark"
+st.markdown(f"""<style>
+  :root {{
+    --tc-card: {"#171a26" if _dark else "#ffffff"};
+    --tc-shadow: {"none" if _dark else "0 1px 2px rgba(20,24,40,.04), 0 4px 16px rgba(20,24,40,.06)"};
+    --tc-muted: {"#9aa0b4" if _dark else "#5b6175"};
+    --tc-accent: {"#818cf8" if _dark else "#4f46e5"};
+    --tc-hero: {"linear-gradient(135deg,#1e1b4b 0%,#172554 100%)" if _dark
+                else "linear-gradient(135deg,#eef0ff 0%,#e6f0ff 100%)"};
+  }}
+  /* the main view gets the room; the sidebar is just controls */
+  @media (min-width: 900px) {{
+    section[data-testid="stSidebar"] {{ width: 290px !important; min-width: 290px !important; }}
+  }}
+  .block-container {{ padding-top: 2.2rem; max-width: 1280px; }}
+  /* bordered containers become cards */
+  [data-testid="stVerticalBlock"][class*="border"], div[data-testid="stVerticalBlockBorderWrapper"] {{
+    background: var(--tc-card); box-shadow: var(--tc-shadow);
+  }}
+  [data-testid="stFileUploaderDropzone"] {{ background: var(--tc-card); border: 1.5px dashed var(--tc-accent); }}
+  [data-testid="stMetricValue"] {{ font-weight: 650; letter-spacing: -0.01em; }}
+  [data-testid="stMetricLabel"] p {{ color: var(--tc-muted); font-weight: 500; }}
+  /* tabs read as navigation, not as small print */
+  .stTabs [data-baseweb="tab-list"] {{ gap: 0.4rem; }}
+  .stTabs [data-baseweb="tab"] p {{ font-size: 1rem; font-weight: 600; }}
+  /* lists breathe */
+  [data-testid="stMarkdownContainer"] li {{ margin-bottom: 0.5rem; line-height: 1.65; }}
+  h1, h2, h3 {{ letter-spacing: -0.015em; }}
+  .tc-hero {{ background: var(--tc-hero); border-radius: 1.1rem; padding: 2.2rem 2.4rem 2rem; margin-bottom: 1.2rem; }}
+  .tc-eyebrow {{ color: var(--tc-accent); font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+                 font-size: .8rem; margin-bottom: .6rem; }}
+  .tc-hero h1 {{ font-size: 2.5rem; line-height: 1.2; margin: 0 0 .8rem; padding: 0; }}
+  .tc-hero p {{ font-size: 1.15rem; color: var(--tc-muted); margin: 0; max-width: 46rem; }}
+  .tc-pills {{ display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1.2rem; }}
+  .tc-pill {{ background: var(--tc-card); border-radius: 999px; padding: .3rem .85rem; font-size: .9rem;
+              font-weight: 500; box-shadow: var(--tc-shadow); }}
+  @media (max-width: 640px) {{ .tc-hero {{ padding: 1.4rem; }} .tc-hero h1 {{ font-size: 1.7rem; }} }}
 </style>""", unsafe_allow_html=True)
+if _dark:
+    # Streamlit's built-in dark theme has a red accent; match the light theme's indigo
+    st.markdown("""<style>
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+      html { font-size: 18px; }
+      body, .stApp, .stApp p, .stApp li, .stApp label, .stApp h1, .stApp h2, .stApp h3, .stApp h4, .stApp h5 {
+        font-family: Inter, "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif; }
+      .stApp { background: #0f1118; }
+      section[data-testid="stSidebar"] { background: #151824; }
+      label[data-baseweb="radio"]:has(input:checked) > div:first-child,
+      label[data-baseweb="checkbox"]:has(input:checked) > div:first-child {
+        background-color: #818cf8 !important; border-color: #818cf8 !important; }
+      [data-testid="stBaseButton-primary"], [data-testid="stBaseButton-primaryFormSubmit"] {
+        background: #6366f1; border-color: #6366f1; color: #fff; }
+      [data-testid="stBaseButton-primary"]:hover { background: #818cf8; border-color: #818cf8; color: #fff; }
+      .stTabs [data-baseweb="tab-highlight"] { background-color: #818cf8; }
+      .stTabs [aria-selected="true"] p { color: #a5b4fc; }
+      [data-testid="stMarkdownContainer"] a { color: #a5b4fc; }
+    </style>""", unsafe_allow_html=True)
 if (st.context.theme.type or "light") == "light":
     # Streamlit's light warning box is pale yellow text on pale yellow; darken it
     st.markdown("""<style>
@@ -181,8 +231,13 @@ def load_profile(data: bytes, method: str | None, source: str, live: tuple = ())
     return style.profile(load(data, method, source, live))
 
 
-def set_theme(name: str) -> None:
-    """Save the viewer's choice where Streamlit keeps it (this browser only) and reload."""
+def set_theme(dark: bool) -> None:
+    """Save the viewer's choice where Streamlit keeps it (this browser only) and reload.
+
+    Light is our own theme (Streamlit picks it when nothing is saved); dark is Streamlit's
+    built-in one, the only kind it remembers across page loads."""
+    save = ('w.localStorage.setItem(key, JSON.stringify({name: "Dark"}));' if dark
+            else "w.localStorage.removeItem(key);")
     components.html(f"""<script>
       const w = window.parent;
       const tabs = [...w.document.querySelectorAll('button[role="tab"]')];
@@ -190,7 +245,8 @@ def set_theme(name: str) -> None:
       const url = new URL(w.location.href);
       if (open >= 0) url.searchParams.set("tab", open);
       w.history.replaceState(null, "", url);
-      w.localStorage.setItem(`stActiveTheme-${{w.location.pathname}}-v1`, JSON.stringify({{name: "{name}"}}));
+      const key = `stActiveTheme-${{w.location.pathname}}-v1`;
+      {save}
       w.location.reload();
     </script>""", height=0)
 
@@ -207,7 +263,7 @@ with st.sidebar:
     t = Translator(lang)
     dark = (st.context.theme.type or "light") == "dark"
     if top_r.toggle("🌙", value=dark, help=t("theme_help")) != dark:
-        set_theme("Light" if dark else "Dark")
+        set_theme(not dark)
     st.header(t("upload_header"))
     up = st.file_uploader(t("upload_label"), type="csv")
     advanced = st.expander(t("advanced"))
@@ -383,17 +439,9 @@ with st.sidebar:
     offer("pro", "sidebar")
     st.caption(t("plans_pointer"))
     st.markdown(f"##### 📄 {t('offer_title')}")
-    st.caption(t("offer_body"))
+    st.caption(t("offer_short"))
     offer("report", "sidebar")
-    with st.expander(t("feedback_title")):
-        with st.form("feedback", clear_on_submit=True):
-            text = st.text_area(t("feedback_label"), max_chars=1000)
-            if st.form_submit_button(t("feedback_send")) and text.strip():
-                analytics.track("feedback", text=text.strip(), lang=lang)
-                st.success(t("feedback_thanks"))
-    with st.expander(t("privacy_title")):
-        st.markdown(t("privacy_body"))
-    st.caption(t("disclaimer"))
+    st.caption(t("sidebar_footer"))
 m_ = lambda x, sign=True, d=0: money(x, B, sign, d)  # noqa: E731
 a = r.attribution
 trading = a["stock_price"]
@@ -402,15 +450,16 @@ other = a["income_fees"]
 
 # ---------- header ----------
 if demo:
-    st.caption("TrueCost")
-    st.markdown(f"# {t('hero_title')}")
-    st.markdown(f"##### {t('hero_sub')}")
+    pills = "".join(f'<span class="tc-pill">{p}</span>' for p in t("hero_pills"))
+    st.markdown(f'''<div class="tc-hero"><div class="tc-eyebrow">TrueCost · IBKR</div>
+      <h1>{t("hero_title")}</h1><p>{t("hero_sub")}</p><div class="tc-pills">{pills}</div></div>''',
+                unsafe_allow_html=True)
     h0, h1 = st.columns([3, 2], vertical_alignment="center")
     with h0:
         st.file_uploader(t("hero_upload"), type="csv", key="hero_upload")
         st.caption(t("hero_private"))
     with h1:
-        st.info(md(t("hero_or")))
+        st.markdown(md(t("hero_or")))
 else:
     st.title("TrueCost")
     st.caption(t("as_of", date=f"{r.end:%Y-%m-%d}", base=B, source=t("fx_" + r.fx_source)))
@@ -516,6 +565,19 @@ with tab_guide:
     for q in ("safe", "diff", "brokers", "advice"):
         with st.expander(t(f"faq_{q}_q")):
             st.markdown(t(f"faq_{q}_a"))
+    st.divider()
+    p0, p1 = st.columns(2, gap="large")
+    with p0.container(border=True):
+        st.markdown(f"#### {t('privacy_title')}")
+        st.markdown(t("privacy_body"))
+    with p1.container(border=True):
+        st.markdown(f"#### {t('feedback_title')}")
+        with st.form("feedback", clear_on_submit=True, border=False):
+            text = st.text_area(t("feedback_label"), max_chars=1000, height=140)
+            if st.form_submit_button(t("feedback_send")) and text.strip():
+                analytics.track("feedback", text=text.strip(), lang=lang)
+                st.success(t("feedback_thanks"))
+    st.caption(t("disclaimer"))
 
 # ---------- overview ----------
 with tab_overview:

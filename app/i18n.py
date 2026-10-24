@@ -9,6 +9,11 @@ EN = {
     # app chrome
     "lang": "Language",
     "tab_home": "🏠 Home",
+    "hero_pills": ["💱 Trading vs currency", "🎯 Real cost after round trips", "💸 Every fee counted",
+                   "📈 Charts with your buys & sells"],
+    "offer_short": "Your year in one PDF, ready for your accountant.",
+    "sidebar_footer": "🔒 Your statement is never stored · privacy and feedback at the bottom of 🏠 Home. "
+                      "Not tax, financial or investment advice.",
     "hero_title": "Did your IBKR profit come from trading — or from the exchange rate?",
     "hero_sub": "Upload your IBKR statement and see, in your home currency: where your money really came from, "
                 "your true cost after trading around positions, and how much fees are eating.",
@@ -365,6 +370,9 @@ EN = {
 ZH = {
     "lang": "语言",
     "tab_home": "🏠 首页",
+    "hero_pills": ["💱 交易 vs 汇率", "🎯 做 T 后的真实成本", "💸 每一笔费用", "📈 K 线上的买卖点"],
+    "offer_short": "一整年浓缩成一份 PDF，可直接交给会计师。",
+    "sidebar_footer": "🔒 不保存你的对账单 · 隐私说明和反馈在「🏠 首页」底部。仅供参考，不构成税务、财务或投资建议。",
     "hero_title": "你在 IBKR 赚的钱，是交易赚的，还是汇率给的？",
     "hero_sub": "上传 IBKR 对账单，用你的本币看清：钱到底从哪来、做 T 之后的真实成本、佣金吃掉了多少。",
     "hero_upload": "把 IBKR 活动对账单（CSV）拖到这里",

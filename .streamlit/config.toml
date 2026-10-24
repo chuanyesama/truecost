@@ -1,6 +1,24 @@
 [theme]
-# light by default; viewers can switch to dark in the sidebar
+# our palette is the light theme; the sidebar's 🌙 switch uses Streamlit's built-in dark theme
+# (Streamlit 1.51 forgets a custom [theme.dark] choice on every page load), and app.py
+# recolours its accents to match
 base = "light"
+font = "Inter:https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap, PingFang SC, Microsoft YaHei, Noto Sans SC, sans-serif"
+baseFontSize = 18
+baseRadius = "0.7rem"
+buttonRadius = "0.6rem"
+showSidebarBorder = true
+primaryColor = "#4f46e5"
+backgroundColor = "#f6f7fb"
+secondaryBackgroundColor = "#eceef5"
+textColor = "#1c1f2b"
+borderColor = "#e1e4ee"
+linkColor = "#4338ca"
+greenColor = "#15803d"
+redColor = "#c2410c"
+
+[theme.sidebar]
+backgroundColor = "#ffffff"
 
 [browser]
 gatherUsageStats = false
