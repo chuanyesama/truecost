@@ -7,6 +7,7 @@ from __future__ import annotations
 import os
 import sys
 import tempfile
+import threading
 import time
 from contextlib import contextmanager
 from pathlib import Path
@@ -209,27 +210,68 @@ with st.sidebar:
         set_theme("Light" if dark else "Dark")
     st.header(t("upload_header"))
     up = st.file_uploader(t("upload_label"), type="csv")
-    st.caption(t("guide_pointer"))
-    method_key = st.selectbox(t("lot_method"), list(METHODS), format_func=t, help=t("lot_method_help"))
+    advanced = st.expander(t("advanced"))
+    with advanced:
+        method_key = st.selectbox(t("lot_method"), list(METHODS), format_func=t, help=t("lot_method_help"))
+
+@st.cache_resource
+def history_job() -> dict:
+    """Shared state of the background history download (survives reruns)."""
+    return {"thread": None, "error": None}
+
+
+def history_stale() -> bool:
+    return (not ACTIVITY_XML.exists()
+            or time.time() - ACTIVITY_XML.stat().st_mtime > SYNC_EVERY
+            or pd.Timestamp.fromtimestamp(ACTIVITY_XML.stat().st_mtime).date() < pd.Timestamp.now().date())
+
+
+def start_history_download(token: str, query: str) -> None:
+    """IBKR can take minutes to build the full history; never make the page wait for it."""
+    job = history_job()
+    if job["thread"] is not None and job["thread"].is_alive():
+        return
+
+    def work():
+        try:
+            xml = flex.fetch(token, query)
+            ACTIVITY_XML.write_text(xml, encoding="utf-8")
+            job["error"] = None
+        except Exception as e:  # shown in the sidebar on the next rerun
+            job["error"] = str(e) if isinstance(e, flex.FlexError) else type(e).__name__
+
+    job["thread"] = threading.Thread(target=work, daemon=True)
+    job["thread"].start()
+
+
+def rebuild_cache(today_query: str | None) -> None:
+    flex.save_statement(ACTIVITY_XML.read_text(encoding="utf-8"), FLEX_CACHE,
+                        TODAY_XML.read_text(encoding="utf-8") if today_query and TODAY_XML.exists() else None)
+
 
 def sync_now(token: str, query: str, today_query: str | None) -> None:
-    """Refresh from IBKR. Today's executions are fetched every time (a few seconds); the
-    history is refetched only when the cached copy is from an earlier day or missing."""
+    """Refresh from IBKR without blocking the page.
+
+    Today's executions (a few seconds) are fetched with a short time limit; the history
+    is refreshed in the background when the saved copy is from an earlier day, and the
+    page keeps showing the last saved data meanwhile. Only the very first sync, with
+    nothing saved yet, has to wait for the history."""
     box = st.sidebar.empty()
     try:
-        stale = (not ACTIVITY_XML.exists()
-                 or time.time() - ACTIVITY_XML.stat().st_mtime > SYNC_EVERY
-                 or pd.Timestamp.fromtimestamp(ACTIVITY_XML.stat().st_mtime).date() < pd.Timestamp.now().date())
-        if stale:
-            box.info(t("sync_running"))
-            ACTIVITY_XML.write_text(flex.fetch(token, query, on_wait=lambda n: box.info(t("sync_waiting", n=n))),
-                                    encoding="utf-8")
+        if history_stale():
+            if ACTIVITY_XML.exists():
+                start_history_download(token, query)
+            else:
+                box.info(t("sync_running"))
+                ACTIVITY_XML.write_text(flex.fetch(token, query, on_wait=lambda n: box.info(t("sync_waiting", n=n))),
+                                        encoding="utf-8")
         if today_query:
             box.info(t("sync_today"))
-            TODAY_XML.write_text(flex.fetch(token, today_query, wait=2), encoding="utf-8")
-        flex.save_statement(ACTIVITY_XML.read_text(encoding="utf-8"), FLEX_CACHE,
-                            TODAY_XML.read_text(encoding="utf-8") if today_query and TODAY_XML.exists() else None)
-        st.session_state.synced_at = pd.Timestamp.now()
+            try:
+                TODAY_XML.write_text(flex.fetch(token, today_query, wait=2, attempts=8), encoding="utf-8")
+            except Exception as e:
+                st.sidebar.warning(t("sync_today_failed", err=str(e) if isinstance(e, flex.FlexError) else type(e).__name__))
+        rebuild_cache(today_query)
         box.success(t("sync_done"))
     except flex.FlexError as e:
         box.error(t("sync_failed", err=str(e)))
@@ -237,6 +279,7 @@ def sync_now(token: str, query: str, today_query: str | None) -> None:
         box.error(t("sync_failed", err=type(e).__name__))
 
 
+up = up or st.session_state.get("hero_upload")
 token, query, today_query = flex_credentials()
 synced = bool(token and up is None and not os.environ.get("TRUECOST_DEMO"))
 if synced:
@@ -246,6 +289,13 @@ if synced:
         if st.button(t("sync_button"), type="primary", width="stretch") or not st.session_state.get("auto_synced"):
             st.session_state.auto_synced = True
             sync_now(token, query, today_query)
+        elif ACTIVITY_XML.exists() and FLEX_CACHE.exists() and ACTIVITY_XML.stat().st_mtime > FLEX_CACHE.stat().st_mtime:
+            rebuild_cache(today_query)  # the background download finished: use it
+        job = history_job()
+        if job["thread"] is not None and job["thread"].is_alive():
+            st.info(t("history_updating"))
+        elif job["error"]:
+            st.warning(t("history_failed", err=job["error"]))
         if FLEX_CACHE.exists():
             age = pd.Timestamp.fromtimestamp(FLEX_CACHE.stat().st_mtime)
             st.caption(t("sync_last", when=f"{age:%Y-%m-%d %H:%M:%S}"))
@@ -273,7 +323,7 @@ except Exception as e:  # not an IBKR Activity Statement, or a format we don't h
     st.error(t("parse_error"))
     st.stop()
 
-with st.sidebar:
+with advanced:
     sources = ["rba", "ecb"] if probe.base == "AUD" else ["ecb"]
     source = st.selectbox(t("fx_source"), sources, format_func=lambda s: t("fx_" + s))
 
@@ -351,38 +401,109 @@ currency = a["stock_fx"] + a["cash_fx"] + a["conversion"]
 other = a["income_fees"]
 
 # ---------- header ----------
-st.title("TrueCost")
-st.caption(t("tagline"))
-st.caption(t("as_of", date=f"{r.end:%Y-%m-%d}", base=B, source=t("fx_" + r.fx_source)))
 if demo:
-    st.info(t("demo_banner"))
-if r.reconciles:
-    st.success(md(t("reconciled", nav=m_(r.nav_end, False), dep=m_(r.net_deposits, False), pl=m_(r.total_pl))))
+    st.caption("TrueCost")
+    st.markdown(f"# {t('hero_title')}")
+    st.markdown(f"##### {t('hero_sub')}")
+    h0, h1 = st.columns([3, 2], vertical_alignment="center")
+    with h0:
+        st.file_uploader(t("hero_upload"), type="csv", key="hero_upload")
+        st.caption(t("hero_private"))
+    with h1:
+        st.info(md(t("hero_or")))
 else:
-    st.error(md(t("not_reconciled", diff=m_(r.total_pl - (r.nav_end - r.net_deposits)))))
+    st.title("TrueCost")
+    st.caption(t("as_of", date=f"{r.end:%Y-%m-%d}", base=B, source=t("fx_" + r.fx_source)))
+    if st.session_state.get("hero_upload") is not None:
+        # keep the home-page upload box on screen, or Streamlit forgets the file on the next click
+        st.file_uploader(t("hero_upload"), type="csv", key="hero_upload")
+    if r.reconciles:
+        st.success(md(t("reconciled_friendly", pl=m_(r.total_pl))))
+    else:
+        st.error(md(t("not_reconciled", diff=m_(r.total_pl - (r.nav_end - r.net_deposits)))))
 
-tab_names = [t("tab_guide")] + t("tabs")
+tab_names = [t("tab_home")] + t("tabs")
 try:  # the theme switch reloads the page; reopen the tab the viewer was on
-    open_tab = tab_names[int(st.query_params.get("tab", 0 if demo else 1))]
+    open_tab = tab_names[int(st.query_params.get("tab", 0))]
 except (ValueError, IndexError):
-    open_tab = tab_names[0 if demo else 1]
+    open_tab = tab_names[0]
 (tab_guide, tab_overview, tab_cost, tab_chart, tab_t, tab_fees, tab_style, tab_fx,
  tab_trades) = st.tabs(tab_names, default=open_tab)
+TAB = dict(zip(["overview", "cost", "chart", "rounds", "fees", "style", "fx", "trades"], t("tabs")))
+
+
+def finding_cards() -> None:
+    """The three things a newcomer should see first, from whichever account is loaded."""
+    fc = load_costs(raw, METHODS[method_key], source, LIVE)
+    c0, c1, c2 = st.columns(3)
+    with c0.container(border=True):
+        st.markdown(f"**{t('card_money')}**")
+        st.metric(t("card_trading"), m_(trading))
+        st.metric(t("card_fx"), m_(currency))
+        if r.total_pl > 0:
+            line = t("card_money_fx") if currency > trading else t("card_money_trade", fx=m_(currency))
+        elif currency > 0:
+            line = t("card_money_offset", trading=m_(-trading, False), fx=m_(currency, False))
+        else:
+            line = t("card_money_both")
+        st.markdown(md(line))
+        st.caption(t("card_go", tab=TAB["overview"]))
+    with c1.container(border=True):
+        st.markdown(f"**{t('card_cost')}**")
+        h = r.holdings.copy()
+        if not h.empty:
+            h["price"] = h["symbol"].map(r.prices)
+            zero = h[h["diluted_cost"] <= 0]
+            if not zero.empty:
+                z = zero.iloc[0]
+                st.metric(z["symbol"], t("card_zero_value"))
+                st.markdown(md(t("card_cost_zero", extra=money(-z["diluted_cost"] * z["shares"], z["currency"], False),
+                                 ibkr=f"{z['ibkr_avg_cost']:,.2f}")))
+            else:
+                h["ibkr"] = 100 * (h["price"] / h["ibkr_avg_cost"] - 1)
+                h["real"] = 100 * (h["price"] / h["diluted_cost"] - 1)
+                g = h.loc[(h["real"] - h["ibkr"]).abs().idxmax()]
+                st.metric(g["symbol"], f"{g['real']:+.1f}%", help=t("card_real_help"))
+                st.markdown(t("card_cost_gap_line", ibkr=g["ibkr"], real=g["real"]))
+        else:
+            done = r.rounds[r.rounds["done"]] if not r.rounds.empty else r.rounds
+            st.metric(t("card_rounds_label"), m_(done["result_base"].sum() if len(done) else 0))
+            st.markdown(t("card_cost_rounds", n=len(done)))
+        st.caption(t("card_go", tab=TAB["cost"]))
+    with c2.container(border=True):
+        st.markdown(f"**{t('card_fees')}**")
+        st.metric(t("card_fees_label"), m_(-fc.total))
+        gross = trading + fc.stock
+        st.markdown(md(t("card_fees_share", share=fc.stock / gross) if gross > 0 and fc.stock > 0.3 * gross
+                       else t("card_fees_avg", n=f"{len(fc.trades):,}",
+                              avg=m_(fc.stock / max(len(fc.trades), 1), False, 2))))
+        st.caption(t("card_go", tab=TAB["fees"]))
+    prof = load_profile(raw, METHODS[method_key], source, LIVE)
+    st.markdown(t("style_line", style=t("style_" + prof.style), tab=TAB["style"]))
 
 # ---------- getting started ----------
 with tab_guide:
-    st.subheader(t("guide_title"))
-    st.markdown(t("guide_intro"))
+    st.subheader(t("findings_demo") if demo else t("findings_you"))
+    if demo:
+        st.caption(t("demo_note"))
+    finding_cards()
+    if demo:
+        st.divider()
+        st.subheader(t("steps_title"))
+        s0, s1, s2 = st.columns(3)
+        for col, n in ((s0, 1), (s1, 2), (s2, 3)):
+            with col.container(border=True):
+                st.markdown(f"**{t(f'step{n}_t')}**")
+                st.markdown(t(f"step{n}_d"))
+        with st.expander(t("steps_detail")):
+            st.markdown(t("guide_s1_body"))
+            st.markdown(f"**{t('guide_s1_mistakes')}**")
+            st.markdown(t("guide_s1_mistakes_body"))
+            st.markdown(t("guide_s2_body"))
+    with st.expander(t("tabs_explained")):
+        st.markdown(t("guide_s3_table"))
     st.divider()
-    st.markdown(f"#### {t('guide_s1')}")
-    st.markdown(t("guide_s1_body"))
-    with st.expander(t("guide_s1_mistakes")):
-        st.markdown(t("guide_s1_mistakes_body"))
-    st.markdown(f"#### {t('guide_s2')}")
-    st.markdown(t("guide_s2_body"))
-    st.markdown(f"#### {t('guide_s3')}")
-    st.markdown(t("guide_s3_table"))
-    st.markdown(f"#### {t('guide_s4')}")
+    st.subheader(t("guide_s4"))
     st.markdown(t("guide_s4_body"))
     st.markdown(md(t("plans_table", month=price_of("pro_month"), year=price_of("pro_year"),
                      report=price_of("report"))))
