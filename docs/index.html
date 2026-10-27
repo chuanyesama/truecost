@@ -209,11 +209,12 @@
         <a class="btn btn-primary app-link" href="https://truecost.streamlit.app" data-t="free_cta"></a>
       </div>
       <div class="plan reveal">
-        <span class="state soon" data-t="s_soon"></span>
+        <span class="state soon" data-t="s_presale"></span>
         <h3 data-t="pro_t"></h3>
-        <div class="price">A$9 <small data-t="pro_unit"></small></div>
+        <div class="price">A$49 <small data-t="pro_unit"></small></div>
+        <p class="plan-after" data-t="pro_after"></p>
         <ul><li data-t="pro_1"></li><li data-t="pro_2"></li><li data-t="pro_3"></li><li data-t="pro_4"></li><li data-t="pro_5"></li></ul>
-        <a class="btn btn-ghost app-link" href="https://truecost.streamlit.app" data-t="soon_cta"></a>
+        <a class="btn btn-primary" href="https://buy.stripe.com/dRmeVe8MLd9w0MT7DmfEk00?client_reference_id=site_pricing" data-where="pricing_founder" data-t="founder_cta"></a>
       </div>
       <div class="plan reveal">
         <span class="state soon" data-t="s_soon"></span>
@@ -320,18 +321,19 @@ const T = {
     n2_t: "Doesn't keep your statement", n2_d: "The free version reads your file for your visit only. No account, nothing stored.",
     n3_t: "Not financial or tax advice", n3_d: "We show your own numbers. No stock tips; check tax figures with a registered tax agent.",
     price_eyebrow: "Pricing", price_title: "Everything that's live is free",
-    price_sub: "Pro and the annual report are still being built. Nothing can be bought yet — tell us in the app what you'd pay for.",
-    s_live: "Live now", s_soon: "🚧 In development",
+    price_sub: "Pro and the annual report are still being built. Founding members can lock in Pro's first year at A$49 today.",
+    s_live: "Live now", s_soon: "🚧 In development", s_presale: "🚧 In development · presale",
     free_t: "Free", free_1: "Upload your IBKR CSV, any home currency", free_2: "Trading vs currency split",
     free_3: "Real cost, round trips, fees, trading style", free_4: "Daily & weekly charts with your trades", free_5: "No sign-up, nothing stored",
     free_cta: "Start free",
-    pro_t: "Pro", pro_unit: "/month (planned)",
+    pro_t: "Pro", pro_unit: "first year · founding member",
+    pro_after: "Then A$79/year or A$9/month. Launching by 31 Mar 2027 — or a full refund.",
     pro_1: "Auto-sync from IBKR — no more CSVs", pro_2: "Today's trades, one-click refresh", pro_3: "Multi-year history, merged",
     pro_4: "Intraday charts (2H–1M)", pro_5: "AI: ask your account, monthly review",
     rep_t: "Annual report", rep_unit: "one-off (planned)",
     rep_1: "Your year in one PDF, in your home currency", rep_2: "Every closed trade at that day's rate", rep_3: "Ready to hand to your accountant",
-    soon_cta: "Join the waitlist",
-    price_note: "Waitlist and survey live in the app's 🏠 Home tab — your answers decide what we build first and what it costs.",
+    soon_cta: "Join the waitlist", founder_cta: "Become a founding member",
+    price_note: "Payment is handled by Stripe — TrueCost never sees your card. Not ready to pay? The 30-second survey in the app's 🏠 Home tab decides what we build first.",
     faq_title: "Questions",
     q1: "Is it safe to upload my statement?",
     a1: "The free version never stores your file: it's read in memory for your visit and the temporary file is deleted straight away. Anonymous usage counts (no amounts, symbols or account numbers) help us improve it.",
@@ -403,18 +405,19 @@ const T = {
     n2_t: "不保存你的对账单", n2_d: "免费版只在本次访问中读取文件，不用注册，什么都不保存。",
     n3_t: "不提供投资或税务建议", n3_d: "只展示你自己的数字，不荐股；报税数字请让注册税务师核对。",
     price_eyebrow: "价格", price_title: "已上线的功能全部免费",
-    price_sub: "专业版和年度报告还在开发中，暂时不能购买——欢迎在网站里告诉我们你愿意为什么付费。",
-    s_live: "已上线", s_soon: "🚧 开发中",
+    price_sub: "专业版和年度报告还在开发中。现在成为创始会员，专业版首年只要 A$49。",
+    s_live: "已上线", s_soon: "🚧 开发中", s_presale: "🚧 开发中 · 预售",
     free_t: "免费版", free_1: "上传 IBKR CSV，支持任何本币", free_2: "交易 vs 汇率拆分",
     free_3: "真实成本、做 T、费用、交易风格", free_4: "日线、周线 K 线 + 你的买卖点", free_5: "不用注册，不保存数据",
     free_cta: "免费开始",
-    pro_t: "专业版", pro_unit: "/月（计划）",
+    pro_t: "专业版", pro_unit: "首年 · 创始会员",
+    pro_after: "之后 A$79/年 或 A$9/月。最晚 2027-03-31 上线，否则全额退款。",
     pro_1: "从 IBKR 自动同步，不用再下载 CSV", pro_2: "当天交易，一键刷新", pro_3: "多年历史自动合并",
     pro_4: "分钟级 K 线（2H–1M）", pro_5: "AI：问你的账户、每月复盘",
     rep_t: "年度报告", rep_unit: "一次性（计划）",
     rep_1: "一整年浓缩成一份本币 PDF", rep_2: "每笔平仓按当天汇率换算", rep_3: "可以直接交给会计师",
-    soon_cta: "加入等候名单",
-    price_note: "等候名单和 30 秒问卷在网站的「🏠 首页」——你的回答决定我们先做什么、定什么价。",
+    soon_cta: "加入等候名单", founder_cta: "成为创始会员",
+    price_note: "付款由 Stripe 处理，TrueCost 看不到你的卡号。还没想好？网站「🏠 首页」的 30 秒问卷决定我们先做什么。",
     faq_title: "常见问题",
     q1: "上传对账单安全吗？",
     a1: "免费版从不保存你的文件：只在本次访问的内存里读取，临时文件立即删除。我们只统计匿名使用情况（不记录金额、股票代码或账户号码），用来改进产品。",

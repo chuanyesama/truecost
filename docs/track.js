@@ -28,9 +28,12 @@
     catch (e) {}
   };
   addEventListener("load", () => tcTrack("site_view"));
-  // every link to the app counts as a CTA click; data-where says which button
+  // every link to the app counts as a CTA click, a link to the Stripe checkout as a founder click;
+  // data-where says which button
   document.addEventListener("click", e => {
     const a = e.target.closest("a.app-link, a[data-where]");
-    if (a) tcTrack("site_cta", { where: a.dataset.where || "", to: a.classList.contains("app-link") ? "app" : a.getAttribute("href") });
+    if (!a) return;
+    if (a.hostname === "buy.stripe.com") return tcTrack("founder_click", { where: a.dataset.where || "" });
+    tcTrack("site_cta", { where: a.dataset.where || "", to: a.classList.contains("app-link") ? "app" : a.getAttribute("href") });
   });
 })();

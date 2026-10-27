@@ -412,14 +412,27 @@ def price_of(item: str) -> str:
     return money(v, ccy, sign=False, decimals=0 if float(v).is_integer() else 2)
 
 
+FOUNDER_URL = "https://buy.stripe.com/dRmeVe8MLd9w0MT7DmfEk00"
+
+
+def founder_offer(where: str) -> None:
+    """Presale: Pro's first year for A$49 through a Stripe Payment Link. The click is counted before the
+    viewer leaves for Stripe; client_reference_id tells the payment which button it came from."""
+    if st.button(md(t("pro_button")), key=f"pro_{where}", type="primary", width="stretch"):
+        st.session_state[f"pro_{where}_open"] = True
+        analytics.track("founder_click", where=where, base=B, demo=demo)
+    if st.session_state.get(f"pro_{where}_open"):
+        st.info(md(t("founder_terms")))
+        st.link_button(t("founder_pay"), f"{FOUNDER_URL}?client_reference_id=app_{where}", type="primary",
+                       width="stretch")
+
+
 def offer(kind: str, where: str) -> None:
     """Demand test: a priced button, then an optional email for the waitlist."""
-    price = price_of("report" if kind == "report" else "pro_month")
-    if st.button(t(f"{kind}_button", price=price, year=price_of("pro_year")), key=f"{kind}_{where}",
-                 type="primary" if kind == "pro" else "secondary", width="stretch"):
+    price = price_of(kind)
+    if st.button(t(f"{kind}_button", price=price), key=f"{kind}_{where}", width="stretch"):
         st.session_state[f"{kind}_{where}_open"] = True
-        analytics.track("paid_report_click" if kind == "report" else "pro_click",
-                        where=where, base=B, demo=demo, price=price)
+        analytics.track("paid_report_click", where=where, base=B, demo=demo, price=price)
     if st.session_state.get(f"{kind}_{where}_open"):
         st.info(t("offer_soon"))
         with st.form(f"waitlist_{kind}_{where}", clear_on_submit=True):
@@ -472,8 +485,8 @@ with st.sidebar:
     st.divider()
     st.markdown(f"##### ⭐ {t('pro_title')}")
     st.caption(t("pro_pitch"))
-    st.warning(t("pro_status"))
-    offer("pro", "sidebar")
+    st.warning(md(t("pro_status")))
+    founder_offer("sidebar")
     st.caption(t("plans_pointer"))
     st.markdown(f"##### 📄 {t('offer_title')}")
     st.caption(t("offer_short"))
@@ -593,13 +606,13 @@ with tab_guide:
         st.markdown(t("guide_s3_table"))
     st.divider()
     st.subheader(t("guide_s4"))
-    st.warning(t("launch_status"))
+    st.warning(md(t("launch_status")))
     st.markdown(t("guide_s4_body"))
     st.markdown(md(t("plans_table", month=price_of("pro_month"), year=price_of("pro_year"),
                      report=price_of("report"))))
     g0, g1 = st.columns(2)
     with g0:
-        offer("pro", "guide")
+        founder_offer("guide")
     with g1:
         offer("report", "guide")
     st.divider()
