@@ -214,7 +214,10 @@
         <div class="price">A$49 <small data-t="pro_unit"></small></div>
         <p class="plan-after" data-t="pro_after"></p>
         <ul><li data-t="pro_1"></li><li data-t="pro_2"></li><li data-t="pro_3"></li><li data-t="pro_4"></li><li data-t="pro_5"></li></ul>
-        <a class="btn btn-primary" href="https://buy.stripe.com/dRmeVe8MLd9w0MT7DmfEk00?client_reference_id=site_pricing" data-where="pricing_founder" data-t="founder_cta"></a>
+        <div class="plan-btns">
+          <a class="btn btn-primary" href="https://buy.stripe.com/dRmeVe8MLd9w0MT7DmfEk00?client_reference_id=site_pricing_year" data-where="pricing" data-plan="year" data-t="founder_cta"></a>
+          <a class="btn btn-ghost" href="https://buy.stripe.com/7sYfZi0gf4D067d9LufEk01?client_reference_id=site_pricing_month" data-where="pricing" data-plan="month" data-t="month_cta"></a>
+        </div>
       </div>
       <div class="plan reveal">
         <span class="state soon" data-t="s_soon"></span>
@@ -327,12 +330,12 @@ const T = {
     free_3: "Real cost, round trips, fees, trading style", free_4: "Daily & weekly charts with your trades", free_5: "No sign-up, nothing stored",
     free_cta: "Start free",
     pro_t: "Pro", pro_unit: "first year · founding member",
-    pro_after: "Then A$79/year or A$9/month. Launching by 31 Mar 2027 — or a full refund.",
+    pro_after: "Not sure yet? One month for A$12, no renewal. After launch: A$79/year or A$9/month. Launching by 31 Mar 2027 — or a full refund.",
     pro_1: "Auto-sync from IBKR — no more CSVs", pro_2: "Today's trades, one-click refresh", pro_3: "Multi-year history, merged",
     pro_4: "Intraday charts (2H–1M)", pro_5: "AI: ask your account, monthly review",
     rep_t: "Annual report", rep_unit: "one-off (planned)",
     rep_1: "Your year in one PDF, in your home currency", rep_2: "Every closed trade at that day's rate", rep_3: "Ready to hand to your accountant",
-    soon_cta: "Join the waitlist", founder_cta: "Become a founding member",
+    soon_cta: "Join the waitlist", founder_cta: "Become a founding member — A$49/year", month_cta: "Try one month — A$12",
     price_note: "Payment is handled by Stripe — TrueCost never sees your card. Not ready to pay? The 30-second survey in the app's 🏠 Home tab decides what we build first.",
     faq_title: "Questions",
     q1: "Is it safe to upload my statement?",
@@ -411,12 +414,12 @@ const T = {
     free_3: "真实成本、做 T、费用、交易风格", free_4: "日线、周线 K 线 + 你的买卖点", free_5: "不用注册，不保存数据",
     free_cta: "免费开始",
     pro_t: "专业版", pro_unit: "首年 · 创始会员",
-    pro_after: "之后 A$79/年 或 A$9/月。最晚 2027-03-31 上线，否则全额退款。",
+    pro_after: "还没想好？也可以先买一个月 A$12，不自动续费。上线后正式价 A$79/年 或 A$9/月。最晚 2027-03-31 上线，否则全额退款。",
     pro_1: "从 IBKR 自动同步，不用再下载 CSV", pro_2: "当天交易，一键刷新", pro_3: "多年历史自动合并",
     pro_4: "分钟级 K 线（2H–1M）", pro_5: "AI：问你的账户、每月复盘",
     rep_t: "年度报告", rep_unit: "一次性（计划）",
     rep_1: "一整年浓缩成一份本币 PDF", rep_2: "每笔平仓按当天汇率换算", rep_3: "可以直接交给会计师",
-    soon_cta: "加入等候名单", founder_cta: "成为创始会员",
+    soon_cta: "加入等候名单", founder_cta: "成为创始会员 — 首年 A$49", month_cta: "先买一个月 — A$12",
     price_note: "付款由 Stripe 处理，TrueCost 看不到你的卡号。还没想好？网站「🏠 首页」的 30 秒问卷决定我们先做什么。",
     faq_title: "常见问题",
     q1: "上传对账单安全吗？",

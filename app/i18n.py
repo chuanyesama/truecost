@@ -10,10 +10,11 @@ EN = {
     "lang": "Language",
     "tab_home": "🏠 Home",
     "pro_status": "🚧 Pro is still being built and launches by 31 Mar 2027. Founding members lock in the first "
-                  "year for A$49 (then A$79/year) — full refund if it isn't live in time.",
+                  "year for A$49 (then A$79/year), or try one month for A$12 — full refund if it isn't live in time.",
     "launch_status": "🚧 **What's live today is the free version** — every analysis above and in the tabs works now. "
                      "**Pro, the annual report and the AI features are still being built.** Founding members can "
-                     "already lock in Pro's first year for A$49 (full refund if it isn't live by 31 Mar 2027); the "
+                     "already lock in Pro's first year for A$49, or one month for A$12 (full refund if it isn't live "
+                     "by 31 Mar 2027); the "
                      "report button only registers interest. Your answers in the survey below decide what we build "
                      "first.",
     "survey_callout": "🙋 **Pro, the annual report and AI aren't live yet.** Tell us in 30 seconds what you'd want and "
@@ -174,8 +175,12 @@ EN = {
     "pro_title": "TrueCost Pro",
     "pro_pitch": "Open the site and see today's trades and positions — synced from IBKR, one click to refresh. "
                  "Plus multi-year history, intraday charts and AI.",
-    "pro_button": "⭐ Become a founding member — A$49 first year",
-    "founder_terms": "You pay A$49 on Stripe's secure checkout (TrueCost never sees your card). It covers your first "
+    "pro_button_year": "⭐ Become a founding member — A$49 first year",
+    "pro_button_month": "Try one month — A$12",
+    "founder_terms_month": "You pay A$12 on Stripe's secure checkout (TrueCost never sees your card). It covers one "
+                           "month of Pro from launch and doesn't renew. If Pro isn't live by 31 Mar 2027 you get a "
+                           "full refund, and you can ask for one any time before launch: truecost.help@gmail.com.",
+    "founder_terms_year": "You pay A$49 on Stripe's secure checkout (TrueCost never sees your card). It covers your first "
                      "year of Pro from launch — then A$79/year or A$9/month. If Pro isn't live by 31 Mar 2027 you get "
                      "a full refund, and you can ask for one any time before launch: truecost.help@gmail.com.",
     "founder_pay": "Continue to secure payment →",
@@ -188,7 +193,7 @@ EN = {
                    "| History | One statement at a time | Multi-year, merged |\n"
                    "| AI: ask your account, monthly review | — | ✅ |\n"
                    "| Annual report (PDF) | {report} each | Included |\n\n"
-                   "**Pro: {month}/month or {year}/year — founding members A$49 for the first year.**",
+                   "**Pro: {month}/month or {year}/year. Presale: A$49 for the first year, or A$12 for one month.**",
     "offer_soon": "Not live yet — nothing was charged. Leave your email and we'll tell you when it's ready "
                   "(with an early-bird price). Even better: fill in the short survey on 🏠 Home.",
     "offer_email": "Email (optional)", "offer_notify": "Notify me",
@@ -464,10 +469,10 @@ EN = {
 ZH = {
     "lang": "语言",
     "tab_home": "🏠 首页",
-    "pro_status": "🚧 专业版还在开发中，最晚 2027-03-31 上线。现在成为创始会员，首年只要 A$49（之后 A$79/年）；"
-                  "没按时上线全额退款。",
+    "pro_status": "🚧 专业版还在开发中，最晚 2027-03-31 上线。现在成为创始会员，首年只要 A$49（之后 A$79/年），"
+                  "也可以先买一个月 A$12；没按时上线全额退款。",
     "launch_status": "🚧 **目前上线的是免费版**：上面和各个标签页里的分析现在都能直接用。"
-                     "**专业版、年度报告和 AI 功能都还在开发中。** 专业版现在可以 A$49 锁定创始会员首年"
+                     "**专业版、年度报告和 AI 功能都还在开发中。** 专业版现在可以 A$49 锁定创始会员首年，或先买一个月 A$12"
                      "（2027-03-31 前没上线全额退款）；年度报告的按钮只是登记兴趣，不会扣款。"
                      "先做哪个，由你在下面问卷里的回答决定。",
     "survey_callout": "🙋 **专业版、年度报告和 AI 功能还没上线。** 花 30 秒告诉我们你想要什么、愿不愿意付费 → "
@@ -614,8 +619,12 @@ ZH = {
     "report_button": "预约年度报告 — 预计 {price}",
     "pro_title": "TrueCost 专业版",
     "pro_pitch": "打开网站就能看到今天的交易和持仓——自动从 IBKR 同步，点一下就刷新。另有多年历史合并、分钟级 K 线和 AI 分析。",
-    "pro_button": "⭐ 成为创始会员 — 首年 A$49",
-    "founder_terms": "将跳转到 Stripe 安全付款页支付 A$49（TrueCost 看不到你的卡号）。从专业版上线起算一整年，"
+    "pro_button_year": "⭐ 成为创始会员 — 首年 A$49",
+    "pro_button_month": "先买一个月 — A$12",
+    "founder_terms_month": "将跳转到 Stripe 安全付款页支付 A$12（TrueCost 看不到你的卡号）。从专业版上线起算一个月，"
+                           "不自动续费。如果 2027-03-31 前没上线，全额退款；上线前也可以随时申请退款："
+                           "truecost.help@gmail.com。",
+    "founder_terms_year": "将跳转到 Stripe 安全付款页支付 A$49（TrueCost 看不到你的卡号）。从专业版上线起算一整年，"
                      "之后 A$79/年 或 A$9/月。如果 2027-03-31 前没上线，全额退款；上线前也可以随时申请退款："
                      "truecost.help@gmail.com。",
     "founder_pay": "去安全付款 →",
@@ -628,7 +637,7 @@ ZH = {
                    "| 历史范围 | 一次一份对账单 | 多年自动合并 |\n"
                    "| AI：问你的账户、每月复盘 | — | ✅ |\n"
                    "| 年度报告 PDF | 每份 {report} | 包含 |\n\n"
-                   "**专业版：{month}/月，或 {year}/年；创始会员首年 A$49。**",
+                   "**专业版：{month}/月，或 {year}/年。预售：首年 A$49，或单月 A$12。**",
     "offer_soon": "还没上线，没有扣款。留下邮箱，上线时第一时间通知你（并享受早鸟价）。也欢迎填一下「🏠 首页」的小问卷。",
     "offer_email": "邮箱（选填）", "offer_notify": "通知我",
     "offer_thanks": "谢谢，已登记！", "offer_bad_email": "邮箱格式好像不对。",

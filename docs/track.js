@@ -33,7 +33,8 @@
   document.addEventListener("click", e => {
     const a = e.target.closest("a.app-link, a[data-where]");
     if (!a) return;
-    if (a.hostname === "buy.stripe.com") return tcTrack("founder_click", { where: a.dataset.where || "" });
+    if (a.hostname === "buy.stripe.com")
+      return tcTrack("founder_click", { where: a.dataset.where || "", plan: a.dataset.plan || "" });
     tcTrack("site_cta", { where: a.dataset.where || "", to: a.classList.contains("app-link") ? "app" : a.getAttribute("href") });
   });
 })();

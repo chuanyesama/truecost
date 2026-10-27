@@ -188,6 +188,7 @@ input:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
 .plan li { padding: 6px 0; border-bottom: 1px dashed var(--line); font-size: .95rem; }
 .plan li::before { content: "✓"; color: var(--ok); font-weight: 800; margin-right: 8px; }
 .plan .btn { justify-content: center; }
+.plan-btns { display: grid; gap: 10px; }
 .soon-note { margin-top: 18px; text-align: center; color: var(--muted); font-size: .92rem; }
 
 /* faq */

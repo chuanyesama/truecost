@@ -412,19 +412,23 @@ def price_of(item: str) -> str:
     return money(v, ccy, sign=False, decimals=0 if float(v).is_integer() else 2)
 
 
-FOUNDER_URL = "https://buy.stripe.com/dRmeVe8MLd9w0MT7DmfEk00"
+FOUNDER_URL = {"year": "https://buy.stripe.com/dRmeVe8MLd9w0MT7DmfEk00",
+               "month": "https://buy.stripe.com/7sYfZi0gf4D067d9LufEk01"}
 
 
 def founder_offer(where: str) -> None:
-    """Presale: Pro's first year for A$49 through a Stripe Payment Link. The click is counted before the
-    viewer leaves for Stripe; client_reference_id tells the payment which button it came from."""
-    if st.button(md(t("pro_button")), key=f"pro_{where}", type="primary", width="stretch"):
-        st.session_state[f"pro_{where}_open"] = True
-        analytics.track("founder_click", where=where, base=B, demo=demo)
-    if st.session_state.get(f"pro_{where}_open"):
-        st.info(md(t("founder_terms")))
-        st.link_button(t("founder_pay"), f"{FOUNDER_URL}?client_reference_id=app_{where}", type="primary",
-                       width="stretch")
+    """Presale: Pro's first year (A$49) or one month (A$12) through Stripe Payment Links. Which one the viewer
+    picks is counted before they leave for Stripe; client_reference_id tells each payment its button."""
+    picked = f"pro_{where}_plan"
+    for plan in FOUNDER_URL:
+        if st.button(md(t(f"pro_button_{plan}")), key=f"pro_{where}_{plan}", width="stretch",
+                     type="primary" if plan == "year" else "secondary"):
+            st.session_state[picked] = plan
+            analytics.track("founder_click", where=where, plan=plan, base=B, demo=demo)
+    if plan := st.session_state.get(picked):
+        st.info(md(t(f"founder_terms_{plan}")))
+        st.link_button(t("founder_pay"), f"{FOUNDER_URL[plan]}?client_reference_id=app_{where}_{plan}",
+                       type="primary", width="stretch")
 
 
 def offer(kind: str, where: str) -> None:
