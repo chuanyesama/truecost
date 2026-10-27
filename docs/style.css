@@ -204,6 +204,7 @@ details p { color: var(--muted); margin: 10px 0 0; }
 footer { padding: 40px 0 56px; color: var(--muted); font-size: .88rem; }
 footer .wrap { display: flex; flex-wrap: wrap; gap: 12px 28px; justify-content: space-between; }
 footer a { color: var(--muted); }
+footer .seller { margin-top: 10px; font-size: .8rem; }
 
 /* motion */
 .reveal { opacity: 0; transform: translateY(18px); transition: opacity .7s ease, transform .7s ease; }
