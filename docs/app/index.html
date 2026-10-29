@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TrueCost — your real IBKR profit, in your own currency</title>
+<meta name="description" content="Upload your Interactive Brokers statement and see, in your home currency, whether your profit came from trading or the exchange rate, your real cost after round trips, and what fees cost you. Read in your browser — your statement never leaves your device.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%234f46e5'/><text x='50' y='68' font-size='54' font-family='Arial' font-weight='700' fill='white' text-anchor='middle'>T</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="app.css">
+<script>
+  // theme before first paint: a saved choice wins over the system setting
+  try { const th = localStorage.getItem("tc-theme"); if (th) document.documentElement.dataset.theme = th; } catch (e) {}
+</script>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <a class="logo" href="../"><i>T</i>TrueCost</a>
+    <div class="nav-right">
+      <button class="icon-btn" id="settings-btn" type="button" aria-expanded="false" hidden>⚙️ <span class="hide-sm" data-b="settings"></span></button>
+      <button class="lang" id="lang" type="button" aria-label="Language">中文</button>
+      <button class="icon-btn" id="theme" type="button" aria-label="Dark mode">🌙</button>
+      <label class="btn btn-primary btn-sm" for="file"><span class="hide-sm" data-b="upload"></span><span class="show-sm" aria-hidden="true">⬆ CSV</span></label>
+    </div>
+  </div>
+  <div class="settings" id="settings" hidden></div>
+</nav>
+<input id="file" type="file" accept=".csv,text/csv" hidden>
+
+<header class="hero app-hero center" id="hero">
+  <div class="wrap">
+    <div class="eyebrow">TrueCost · IBKR</div>
+    <h1 data-b="title"></h1>
+    <p class="lead" style="margin-left:auto;margin-right:auto" data-b="sub"></p>
+    <ul class="checks" id="pills"></ul>
+    <label class="drop" for="file" id="drop">
+      <b data-b="drop"></b>
+      <span>.csv</span><br>
+      <span class="btn btn-primary" data-b="upload"></span>
+    </label>
+    <div class="drop-note" data-b="private"></div>
+    <div class="scroll-note md" id="scroll-note"></div>
+  </div>
+</header>
+
+<div class="wrap head" id="head" hidden></div>
+
+<div class="tabbar" id="tabbar" hidden><div class="wrap"><div class="tabs" id="tabs" role="tablist"></div></div></div>
+
+<main class="wrap" id="main">
+  <div class="boot" id="boot">
+    <div><span class="spin"></span><b data-b="booting"></b></div>
+    <div class="bar"><i id="boot-bar" style="width: 5%"></i></div>
+    <p class="cap" data-b="boot_note"></p>
+  </div>
+  <div class="blocks" id="content"></div>
+</main>
+
+<section class="wrap" id="pro"></section>
+
+<footer>
+  <div class="wrap">
+    <span>© 2026 TrueCost · <span id="foot-note"></span></span>
+    <span><a href="https://github.com/chuanyesama/truecost">GitHub</a> · <a href="../" data-b="home"></a> · <a href="mailto:truecost.help@gmail.com">truecost.help@gmail.com</a></span>
+  </div>
+</footer>
+
+<div class="busy" id="busy" hidden><span class="spin"></span><span id="busy-text"></span></div>
+
+<script src="../track.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/morphdom@2.7.4/dist/morphdom-umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/plotly.js-finance-dist-min@2.35.2/plotly-finance.min.js" defer></script>
+<script src="app.js"></script>
+</body>
+</html>

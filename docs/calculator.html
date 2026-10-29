@@ -60,7 +60,7 @@
     </div>
     <div class="nav-right">
       <button class="lang" id="lang" type="button" aria-label="Language">中文</button>
-      <a class="btn btn-primary btn-sm app-link" href="https://truecost.streamlit.app" data-where="nav" data-t="nav_cta"></a>
+      <a class="btn btn-primary btn-sm app-link" href="app/" data-where="nav" data-t="nav_cta"></a>
     </div>
   </div>
 </nav>
@@ -207,7 +207,7 @@
     <div class="end">
       <h2 data-t="end_title"></h2>
       <p data-t="end_sub"></p>
-      <a class="btn btn-primary app-link" href="https://truecost.streamlit.app" data-where="calc_page_end" data-t="end_cta"></a>
+      <a class="btn btn-primary app-link" href="app/" data-where="calc_page_end" data-t="end_cta"></a>
     </div>
   </div>
 </section>
@@ -300,7 +300,7 @@ const T = {
 };
 for (const l of ["en", "zh"]) Object.assign(T[l], CT[l]);
 
-const APP = "https://truecost.streamlit.app";
+const APP = "app";  // the web app, docs/app/
 let lang = (() => {
   const q = new URLSearchParams(location.search).get("lang");
   if (q === "zh" || q === "en") return q;

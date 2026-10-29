@@ -9,3 +9,6 @@ TASKS.md
 Open TrueCost.bat
 # API keys for local runs
 .streamlit/secrets.toml
+
+# account recovery codes, never commit
+stripe_backup_code.txt

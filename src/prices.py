@@ -121,16 +121,27 @@ def statement_timezone(sections: dict, stock_trades: pd.DataFrame, exchanges: di
 
 
 # ---------- bars ----------
-def fetch_bars(ticker: str, range_key: str) -> tuple[pd.DataFrame, str]:
-    """OHLCV bars indexed by bar start time in the exchange's time zone."""
-    rng, interval, trim = RANGES[range_key]
+def chart_query(ticker: str, range_key: str) -> str:
+    """Path and query of Yahoo's chart endpoint for one ticker and range (the web app sends it through a proxy)."""
+    rng, interval, _ = RANGES[range_key]
     # include pre/post-market bars intraday: many users trade outside regular hours
     q = urllib.parse.urlencode({"range": rng, "interval": interval,
                                 "includePrePost": "true" if range_key in INTRADAY else "false"})
-    url = f"https://query1.finance.yahoo.com/v8/finance/chart/{urllib.parse.quote(ticker)}?{q}"
+    return f"/v8/finance/chart/{urllib.parse.quote(ticker)}?{q}"
+
+
+def fetch_bars(ticker: str, range_key: str) -> tuple[pd.DataFrame, str]:
+    """OHLCV bars indexed by bar start time in the exchange's time zone."""
+    url = "https://query1.finance.yahoo.com" + chart_query(ticker, range_key)
     req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (TrueCost)"})
     with urllib.request.urlopen(req, timeout=10) as resp:
-        data = json.load(resp)["chart"]
+        return parse_bars(json.load(resp), ticker, range_key)
+
+
+def parse_bars(payload: dict, ticker: str, range_key: str) -> tuple[pd.DataFrame, str]:
+    """Yahoo's chart JSON -> (bars, exchange time zone)."""
+    trim = RANGES[range_key][2]
+    data = payload["chart"]
     if data.get("error") or not data.get("result"):
         raise LookupError(f"no data for {ticker}")
     res = data["result"][0]

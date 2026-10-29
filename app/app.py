@@ -23,6 +23,7 @@ sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "app"))
 import analytics  # noqa: E402
 from i18n import Translator, money  # noqa: E402
+from offers import FOUNDER_URL, PRICES  # noqa: E402
 from src import costs, flex, prices, report, rounds, style, tcalc  # noqa: E402
 
 RAW = ROOT / "data" / "raw"  # your own statements, never committed
@@ -397,12 +398,6 @@ if up is not None:
                          trades=analytics.trades_bucket(len(r.stock_trades)), reconciles=bool(r.reconciles))
 
 # ---------- paid report (demand test), feedback, privacy ----------
-# prices shown in the viewer's currency (rounded local equivalents of the AUD price)
-PRICES = {
-    "report": {"AUD": 19, "USD": 12, "EUR": 11, "GBP": 10, "NZD": 21, "CAD": 17, "SGD": 16, "HKD": 95},
-    "pro_month": {"AUD": 9, "USD": 6, "EUR": 5.5, "GBP": 4.9, "NZD": 10, "CAD": 8, "SGD": 8, "HKD": 45},
-    "pro_year": {"AUD": 79, "USD": 52, "EUR": 48, "GBP": 42, "NZD": 87, "CAD": 72, "SGD": 70, "HKD": 400},
-}
 
 
 def price_of(item: str) -> str:
@@ -410,10 +405,6 @@ def price_of(item: str) -> str:
     ccy = B if B in table else "USD"
     v = table[ccy]
     return money(v, ccy, sign=False, decimals=0 if float(v).is_integer() else 2)
-
-
-FOUNDER_URL = {"year": "https://buy.stripe.com/dRmeVe8MLd9w0MT7DmfEk00",
-               "month": "https://buy.stripe.com/7sYfZi0gf4D067d9LufEk01"}
 
 
 def founder_offer(where: str) -> None:

@@ -10,7 +10,7 @@
   } catch (e) { id = "web-anon"; }
   const qs = new URLSearchParams(location.search);
   const base = {
-    page: location.pathname.split("/").pop() || "index.html",
+    page: location.pathname.includes("/app/") ? "app" : location.pathname.split("/").pop() || "index.html",
     ref: document.referrer ? new URL(document.referrer).hostname : "",
     utm: qs.get("utm_source") || qs.get("src") || "",
     mobile: matchMedia("(max-width: 760px)").matches,

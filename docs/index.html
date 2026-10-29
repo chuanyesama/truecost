@@ -25,7 +25,7 @@
     </div>
     <div class="nav-right">
       <button class="lang" id="lang" type="button" aria-label="Language">中文</button>
-      <a class="btn btn-primary btn-sm app-link" href="https://truecost.streamlit.app" data-t="nav_cta"></a>
+      <a class="btn btn-primary btn-sm app-link" href="app/" data-t="nav_cta"></a>
     </div>
   </div>
 </nav>
@@ -40,13 +40,13 @@
     </ul>
     <div class="badge reveal" data-t="hero_badge"></div>
     <div class="cta reveal">
-      <a class="btn btn-primary app-link" href="https://truecost.streamlit.app" data-t="hero_cta"></a>
+      <a class="btn btn-primary app-link" href="app/" data-t="hero_cta"></a>
       <a class="btn btn-ghost" href="#calculator" data-t="hero_cta2"></a>
     </div>
     <div class="trust reveal" data-t="hero_trust"></div>
 
     <div class="mock reveal" aria-label="TrueCost screenshot">
-      <div class="mock-bar"><span></span><span></span><span></span><b>truecost.streamlit.app</b></div>
+      <div class="mock-bar"><span></span><span></span><span></span><b>chuanyesama.github.io/truecost/app</b></div>
       <div class="mock-body">
         <div class="mock-tabs"><span class="on" data-t="m_home"></span><span data-t="m_t1"></span><span data-t="m_t2"></span>
           <span data-t="m_t3"></span><span data-t="m_t4"></span><span data-t="m_t5"></span><span data-t="m_t6"></span></div>
@@ -158,7 +158,7 @@
         </div>
         <div class="say" id="r_say"></div>
         <div class="fine" data-t="c_fine"></div>
-        <div class="cta-row"><a class="btn btn-primary app-link" href="https://truecost.streamlit.app" data-t="c_cta"></a>
+        <div class="cta-row"><a class="btn btn-primary app-link" href="app/" data-t="c_cta"></a>
           <a class="btn btn-ghost" href="calculator.html" data-where="calc_full" data-t="calc_full_btn"></a></div>
       </div>
     </div>
@@ -206,7 +206,7 @@
         <h3 data-t="free_t"></h3>
         <div class="price">A$0</div>
         <ul><li data-t="free_1"></li><li data-t="free_2"></li><li data-t="free_3"></li><li data-t="free_4"></li><li data-t="free_5"></li></ul>
-        <a class="btn btn-primary app-link" href="https://truecost.streamlit.app" data-t="free_cta"></a>
+        <a class="btn btn-primary app-link" href="app/" data-t="free_cta"></a>
       </div>
       <div class="plan reveal">
         <span class="state soon" data-t="s_presale"></span>
@@ -224,7 +224,7 @@
         <h3 data-t="rep_t"></h3>
         <div class="price">A$19 <small data-t="rep_unit"></small></div>
         <ul><li data-t="rep_1"></li><li data-t="rep_2"></li><li data-t="rep_3"></li></ul>
-        <a class="btn btn-ghost app-link" href="https://truecost.streamlit.app" data-t="soon_cta"></a>
+        <a class="btn btn-ghost app-link" href="app/" data-t="soon_cta"></a>
       </div>
     </div>
     <p class="soon-note reveal" data-t="price_note"></p>
@@ -248,7 +248,7 @@
     <div class="final reveal">
       <h2 data-t="final_title"></h2>
       <p data-t="final_sub"></p>
-      <a class="btn app-link" href="https://truecost.streamlit.app" data-t="final_cta"></a>
+      <a class="btn app-link" href="app/" data-t="final_cta"></a>
     </div>
   </div>
 </section>
@@ -261,7 +261,7 @@
 <footer>
   <div class="wrap">
     <span>© 2026 TrueCost · <span data-t="foot_disclaimer"></span></span>
-    <span><a href="https://github.com/chuanyesama/truecost">GitHub</a> · <a class="app-link" href="https://truecost.streamlit.app" data-t="foot_app"></a></span>
+    <span><a href="https://github.com/chuanyesama/truecost">GitHub</a> · <a class="app-link" href="app/" data-t="foot_app"></a></span>
   </div>
   <div class="wrap seller">
     <span data-t="foot_seller"></span>
@@ -339,7 +339,7 @@ const T = {
     price_note: "Payment is handled by Stripe — TrueCost never sees your card. Not ready to pay? The 30-second survey in the app's 🏠 Home tab decides what we build first.",
     faq_title: "Questions",
     q1: "Is it safe to upload my statement?",
-    a1: "The free version never stores your file: it's read in memory for your visit and the temporary file is deleted straight away. Anonymous usage counts (no amounts, symbols or account numbers) help us improve it.",
+    a1: "Your statement is read inside your browser and never uploaded to any server — close the tab and it's gone. Anonymous usage counts (no amounts, symbols or account numbers) help us improve TrueCost.",
     q2: "Why don't my numbers match the IBKR app?",
     a2: "IBKR shows profit in each stock's own currency and an average cost that ignores round trips. TrueCost converts every trade at that day's rate into your home currency — and checks the total against your account's actual profit.",
     q3: "Which brokers and currencies are supported?",
@@ -423,7 +423,7 @@ const T = {
     price_note: "付款由 Stripe 处理，TrueCost 看不到你的卡号。还没想好？网站「🏠 首页」的 30 秒问卷决定我们先做什么。",
     faq_title: "常见问题",
     q1: "上传对账单安全吗？",
-    a1: "免费版从不保存你的文件：只在本次访问的内存里读取，临时文件立即删除。我们只统计匿名使用情况（不记录金额、股票代码或账户号码），用来改进产品。",
+    a1: "安全。对账单只在你的浏览器里读取，不会上传到任何服务器，关掉页面就没了。我们只统计匿名使用情况（不记录金额、股票代码或账户号码），用来改进产品。",
     q2: "为什么和 IBKR App 里的数字不一样？",
     a2: "IBKR 按每只股票自己的币种显示盈亏，平均成本也不算做 T。TrueCost 把每笔交易按当天汇率换算成你的本币，并且和账户的实际盈亏核对。",
     q3: "支持哪些券商和币种？",
@@ -444,7 +444,7 @@ const T = {
 };
 
 for (const l of ["en", "zh"]) Object.assign(T[l], CT[l]);
-const APP = "https://truecost.streamlit.app";
+const APP = "app";  // the web app, docs/app/
 const forced = new URLSearchParams(location.search).get("theme");  // ?theme=light for screenshots
 if (forced === "light") document.documentElement.dataset.theme = "light";
 let lang = (() => {

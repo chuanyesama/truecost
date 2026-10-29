@@ -10,7 +10,7 @@ Upload an IBKR Activity Statement and TrueCost answers the questions the broker'
 - **How much am I paying in fees, and why?** Commissions by order size, market and month, how often orders hit the minimum charge, and estimated savings from merging orders or switching pricing plans.
 - **What kind of trader am I?** Holding-period mix, win rate, payoff ratio, profit factor, loss concentration and averaging-down frequency produce a style label and observations, each backed by its numbers. Suggestions cover process only, never which security to trade.
 
-> Try it with the built-in **synthetic sample account** — no real data is included in this repository.
+> **Use it:** [chuanyesama.github.io/truecost/app](https://chuanyesama.github.io/truecost/app/) ([English](https://chuanyesama.github.io/truecost/app/?lang=en) · [中文](https://chuanyesama.github.io/truecost/app/?lang=zh)). It opens on a **synthetic sample account** — no real data is included in this repository.
 
 ## Why
 
@@ -35,7 +35,9 @@ TrueCost turns these findings into something any IBKR user can run on their own 
 | `src/rounds.py` | Flat-to-flat holding cycles and round trips, independent of lot method |
 | `src/costs.py` | Fee breakdown and savings scenarios |
 | `src/style.py` | Trading-habit metrics → style label → evidence-based observations (language-neutral keys) |
-| `app/app.py`, `app/i18n.py` | Streamlit UI, English / Chinese |
+| `app/i18n.py` | English / Chinese strings |
+| `app/web.py`, `docs/app/` | The web app: the same Python runs in the browser (Pyodide), so a statement never leaves the viewer's device |
+| `app/app.py` | Streamlit UI (local use and IBKR Flex auto-sync) |
 
 **Validation.** On a real account (1,700+ stock trades across 5 currencies): realized P/L matches IBKR in every currency (USD within 0.005%), position costs match IBKR's, and the base-currency attribution matches the statement's NAV change exactly. Tests generate synthetic accounts in AUD, USD and EUR and require the same reconciliation.
 
@@ -48,6 +50,7 @@ pip install -r requirements.txt
 streamlit run app/app.py
 ```
 
+- Web app: `python scripts/build_web.py` after changing `src/`, `app/web.py`, `app/i18n.py` or `data/`, then serve `docs/` (`python -m http.server 8600 --directory docs`) and open `/app/`
 - Tests: `python -m pytest`
 - Regenerate the sample account: `python scripts/make_sample.py [BASE]`
 - Put your own statements in `data/raw/` (git-ignored); set `TRUECOST_DEMO=1` to force the sample.
@@ -58,7 +61,7 @@ IBKR Portal → **Performance & Reports → Statements → Activity** → period
 
 ## Privacy
 
-Uploaded statements are parsed in memory for your session; the temporary file is deleted as soon as parsing finishes, and cached results expire after an hour.
+The web app reads a statement inside the viewer's browser; it is never uploaded. (The Streamlit app parses it in memory for the session and deletes the temporary file as soon as parsing finishes.) Live price charts go through a small proxy (`worker/price-proxy.js`) that only ever sees a ticker and a date range.
 
 Anonymous usage events help decide what to build next: page opened, language, whether a statement was uploaded, base currency, number of markets, a rough trade-count range, and which buttons were clicked. No amounts, symbols, account numbers or statement contents are ever sent; a random id covers a single visit. Emails and feedback are stored only if a viewer types them in. Events go to PostHog (EU) and are off unless `POSTHOG_KEY` is set (see `app/analytics.py`).
 
