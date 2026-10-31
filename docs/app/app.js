@@ -130,6 +130,7 @@
         x.options.map(([v, l]) => `<button type="button" class="chip${x.value.includes(v) ? " on" : ""}" data-multi="${esc(x.id)}" data-v="${esc(v)}">${esc(l)}</button>`).join("")}</div></div>`;
       case "download": downloads.push(x); return `<button type="button" class="btn btn-ghost btn-sm" data-dl="${downloads.length - 1}">⬇ ${esc(x.label)}</button>`;
       case "founder": return founder(x);
+      case "locked": return locked(x);
       case "offer": return offer(x);
       case "feedback": return feedback(x);
       case "survey": return survey(x);
@@ -158,6 +159,13 @@
       }<td><button type="button" class="x" data-grid-del="${esc(x.id)}" data-r="${i}" aria-label="remove">×</button></td></tr>`).join("");
     return `<div class="grid-edit"><table><thead><tr>${x.cols.map((c) => `<th>${esc(c)}</th>`).join("")}<th></th></tr></thead><tbody>${rows}</tbody></table>
       <button type="button" class="add" data-grid-add="${esc(x.id)}">+</button></div>`;
+  }
+
+  // a Pro section: placeholder rows (no real numbers) blurred behind the offer
+  function locked(x) {
+    const rows = [64, 82, 47, 73, 58, 90, 41, 68].map((w, i) =>
+      `<div class="ghost-row"><i style="width:${30 + (i * 7) % 25}%"></i><i style="width:${w}%"></i></div>`).join("");
+    return `<div class="locked"><div class="ghost" aria-hidden="true">${rows}</div><div class="card locked-card">${blocks(x.blocks)}</div></div>`;
   }
 
   // offers and forms: answered in the page, counted in analytics

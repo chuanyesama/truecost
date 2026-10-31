@@ -30,7 +30,9 @@ from src import costs, prices, report, rounds, style, tcalc  # noqa: E402
 DEMO = ROOT / "data" / "sample" / "sample_statement.csv"
 DEMO_PRICES = ROOT / "data" / "sample" / "sample_prices.csv"
 METHODS = {"lot_ibkr": None, "lot_fifo": "FIFO", "lot_lifo": "LIFO", "lot_hifo": "HIFO"}
-TABS = ["home", "overview", "cost", "chart", "rounds", "calc", "fees", "style", "fx", "trades"]
+TABS = ["home", "overview", "cost", "chart", "rounds", "calc", "fees", "style", "fx", "trades"]  # i18n "tabs" order
+WEB_TABS = ["home", "overview", "cost", "calc", "rounds", "chart", "fees", "style", "fx", "trades"]  # as shown
+PRO_TABS = {"rounds"}  # complete on the sample account; a preview and the founder offer on a viewer's own statement
 LANG_NAMES = {"en": "English", "zh": "中文"}
 OFFLINE_RANGES = ["3M", "6M", "1Y"]  # what the sample account's cached daily prices cover
 
@@ -67,6 +69,47 @@ WEB_TEXT = {
         "web_upload": "Upload statement", "web_upload_other": "Upload another statement",
         "web_settings": "Settings", "web_sample": "Back to the sample account",
         "web_loading": "Reading your statement…",
+        # the round-trip scorecard is Pro; the calculator stays free
+        "pro_demo_note": "⭐ **Pro feature — shown in full on the sample account.** On your own statement you'll see "
+                         "how many round trips you made and their total; the full scorecard is part of Pro.",
+        "swing_teaser": "We also found **{n} oversized swings** (adding beyond your core position, then selling "
+                        "back). Pro breaks them down one by one, next to your round trips.",
+        "lock_title": "⭐ The full round-trip scorecard is part of Pro",
+        "lock_body": "- Win rate and average result per round\n"
+                     "- Every round of every stock: when, how many shares, result per share\n"
+                     "- Oversized swings vs round trips: where you really make and lose money\n"
+                     "- Cost timeline: your real cost after every trade, next to IBKR's",
+        "pro_pitch": "The full round-trip scorecard, plus today's trades and positions synced from IBKR with one-click "
+                     "refresh, multi-year history, intraday charts and AI.",
+        "guide_s3_table": "| Tab | The question it answers |\n|---|---|\n"
+                          "| **Overview** | How much did I make in total, and how much came from trading vs currency? |\n"
+                          "| **Real cost** | What did each position really cost after my round trips? Any zero-cost holdings? |\n"
+                          "| **🧮 Calculator** | Before I sell: what buy-back price actually lowers my cost after commission? |\n"
+                          "| **Round trips ⭐ Pro** | Does trading around a core position actually make me money? |\n"
+                          "| **Chart** | Where exactly did I buy and sell on the price chart? |\n"
+                          "| **Fees** | How much have commissions cost me, and how could I pay less? |\n"
+                          "| **Trading style** | What kind of trader am I, and what do my habits cost me? |\n"
+                          "| **Currency** | How much did exchange rates add to or take from my shares and cash? |\n"
+                          "| **Trades** | Every closing trade, downloadable as CSV. |\n\n"
+                          "Every page is checked against your account: the green ✅ bar at the top means TrueCost's "
+                          "breakdown adds up exactly to *ending NAV − net deposits*.",
+        "guide_s4_body": "Everything above is **free**, except the full round-trip scorecard (⭐). **Pro** is for active "
+                         "traders:",
+        "launch_status": "🚧 **What's live today:** every tab is free except the full **round-trip scorecard** (⭐ Pro — "
+                         "see it in full on the sample account). **Pro, the annual report and the AI features are "
+                         "still being built.** Founding members can already lock in Pro's first year for A$49, or one "
+                         "month for A$12 (full refund if it isn't live by 31 Mar 2027); the report button only "
+                         "registers interest. Your answers in the survey below decide what we build first.",
+        "plans_table": "| | Free (live) | Pro (🚧 in development) |\n|---|---|---|\n"
+                       "| Round-trip calculator, P/L split, real cost, fees, style | ✅ | ✅ |\n"
+                       "| **Round-trip scorecard**: every round, win rate, swings | Count & total only | **✅ Full** |\n"
+                       "| Getting your data | Download CSV & upload | **Auto-sync, today's trades, one-click refresh** |\n"
+                       "| Account | None, nothing stored | Sign in; encrypted IBKR token |\n"
+                       "| Chart with your trades | Daily & weekly | + intraday (2H–1M) |\n"
+                       "| History | One statement at a time | Multi-year, merged |\n"
+                       "| AI: ask your account, monthly review | — | ✅ |\n"
+                       "| Annual report (PDF) | {report} each | Included |\n\n"
+                       "**Pro: {month}/month or {year}/year. Presale: A$49 for the first year, or A$12 for one month.**",
     },
     "zh": {
         "hero_private": "🔒 在你的浏览器里读取，对账单不会离开你的设备。免费，不用注册。",
@@ -87,6 +130,43 @@ WEB_TEXT = {
         "web_upload": "上传对账单", "web_upload_other": "换一份对账单",
         "web_settings": "设置", "web_sample": "回到示例账户",
         "web_loading": "正在读取对账单…",
+        "pro_demo_note": "⭐ **专业版功能，示例账户完整展示。** 上传你自己的对账单后，可以看到做 T 的轮数和合计；"
+                         "完整成绩单属于专业版。",
+        "swing_teaser": "另外识别到 **{n} 次加仓波段**（加仓超过原底仓再卖回）。专业版会逐笔列出，和做 T 放在一起对比。",
+        "lock_title": "⭐ 完整做 T 成绩单属于专业版",
+        "lock_body": "- 胜率、平均每轮赚多少\n"
+                     "- 每只股票的每一轮：什么时候、做了多少股、每股赚亏\n"
+                     "- 加仓波段 vs 做 T：你到底在哪赚钱、在哪亏钱\n"
+                     "- 成本走势图：每笔交易后的真实成本，和 IBKR 成本对比",
+        "pro_pitch": "完整做 T 成绩单；打开网站就能看到今天的交易和持仓——自动从 IBKR 同步，点一下就刷新。"
+                     "另有多年历史合并、分钟级 K 线和 AI 分析。",
+        "guide_s3_table": "| 页面 | 回答什么问题 |\n|---|---|\n"
+                          "| **总览** | 我一共赚了多少？其中交易赚的和汇率给的各是多少？ |\n"
+                          "| **真实成本** | 做 T 之后，每只股票真实成本是多少？有没有零成本持股？ |\n"
+                          "| **🧮 做T计算器** | 卖出之前：扣掉佣金后，买回价要低于多少才真的降成本？ |\n"
+                          "| **做T记录 ⭐ 专业版** | 在底仓上做差价，到底有没有赚钱？ |\n"
+                          "| **K线图** | 我在哪个价位、哪个时间买的卖的？ |\n"
+                          "| **费用** | 佣金花了多少？怎样能少付？ |\n"
+                          "| **交易风格** | 我是哪种交易者？哪些习惯在花我的钱？ |\n"
+                          "| **汇率拆解** | 汇率给我的股票和现金加了多少、减了多少？ |\n"
+                          "| **交易明细** | 每一笔平仓，可下载 CSV。 |\n\n"
+                          "每个页面都和你的账户对过账：顶部的绿色 ✅ 表示 TrueCost 的拆分加起来"
+                          "正好等于「期末净值 − 净入金」。",
+        "guide_s4_body": "除了完整的做 T 成绩单（⭐），上面所有分析都是**免费**的。**专业版**适合活跃交易者：",
+        "launch_status": "🚧 **目前上线的是免费版**：除了完整的**做 T 成绩单**（⭐ 专业版，示例账户可以看完整效果），"
+                         "其他标签页都能直接用。**专业版、年度报告和 AI 功能都还在开发中。** 专业版现在可以 A$49 "
+                         "锁定创始会员首年，或先买一个月 A$12（2027-03-31 前没上线全额退款）；年度报告的按钮只是登记兴趣，"
+                         "不会扣款。先做哪个，由你在下面问卷里的回答决定。",
+        "plans_table": "| | 免费版（已上线） | 专业版（🚧 开发中） |\n|---|---|---|\n"
+                       "| 做T计算器、盈亏拆解、真实成本、费用、交易风格 | ✅ | ✅ |\n"
+                       "| **做 T 成绩单**：每一轮明细、胜率、加仓波段 | 只看轮数和合计 | **✅ 完整** |\n"
+                       "| 数据导入 | 自己下载 CSV 上传 | **自动同步、当天交易、一键刷新** |\n"
+                       "| 账户 | 不用注册，不保存数据 | 登录；IBKR token 加密保存 |\n"
+                       "| K线图 + 买卖点 | 日线、周线 | + 分钟级（2H–1M） |\n"
+                       "| 历史范围 | 一次一份对账单 | 多年自动合并 |\n"
+                       "| AI：问你的账户、每月复盘 | — | ✅ |\n"
+                       "| 年度报告 PDF | 每份 {report} | 包含 |\n\n"
+                       "**专业版：{month}/月，或 {year}/年。预售：首年 A$49，或单月 A$12。**",
     },
 }
 
@@ -336,13 +416,14 @@ def page(lang: str, p: dict | None = None) -> str:
         header.append(msg("success", t("reconciled_friendly", pl=c.m(r.total_pl))) if r.reconciles
                       else msg("error", t("not_reconciled", diff=c.m(r.total_pl - (r.nav_end - r.net_deposits)))))
     sources = ["rba", "ecb"] if c.B == "AUD" else ["ecb"]
+    names = dict(zip(TABS, [t("tab_home")] + t("tabs")))
     keys = ["hero_title", "hero_sub", "hero_upload", "hero_private", "hero_or", "upload_label", "advanced",
             "lot_method", "lot_method_help", "fx_source", "parse_error", "disclaimer", "sidebar_footer",
             "pro_title", "pro_pitch", "web_upload", "web_upload_other", "web_settings", "web_sample", "web_loading"]
     return dumps({
         "demo": c.demo,
         "text": {k: t(k) for k in keys} | {"hero_pills": t("hero_pills")},
-        "tabs": [[k, n] for k, n in zip(TABS, [t("tab_home")] + t("tabs"))],
+        "tabs": [[k, names[k] + (" ⭐" if k in PRO_TABS else "")] for k in WEB_TABS],
         "header": header,
         "settings": [
             select("method", t("lot_method"), list(METHODS), S["method"], [t(k) for k in METHODS],
@@ -727,7 +808,9 @@ def round_trips(c: Ctx) -> list:
     done_all = rd[rd["done"]]
     done = done_all[done_all["kind"] != rounds.SWING]
     swing = done_all[done_all["kind"] == rounds.SWING]
-    out = [h(t("rounds_title")), cap(t("rounds_caption", base=B)),
+    if not c.demo:
+        return rounds_preview(c, done, swing)
+    out = [h(t("rounds_title")), msg("info", t("pro_demo_note")), cap(t("rounds_caption", base=B)),
            metrics(metric(t("m_rounds"), f"{len(done)}"),
                    metric(t("m_win"), f"{(done['result_base'] > 0).mean():.0%}" if len(done) else "—"),
                    metric(t("m_rounds_total"), m(done["result_base"].sum())),
@@ -791,6 +874,19 @@ def round_trips(c: Ctx) -> list:
                          "yaxis": {"title": {"text": t("price_axis", ccy=one["currency"].iloc[0])},
                                    "range": [lo - pad, hi + pad]},
                          "legend": {"orientation": "h", "y": 1.12}})]
+    return out
+
+
+def rounds_preview(c: Ctx, done: pd.DataFrame, swing: pd.DataFrame) -> list:
+    """Pro preview on the viewer's own statement: how many rounds and their total; the rest is behind the offer."""
+    t, m = c.t, c.m
+    out = [h(t("rounds_title")), cap(t("rounds_caption", base=c.B)),
+           metrics(metric(t("m_rounds"), f"{len(done)}"), metric(t("m_rounds_total"), m(done["result_base"].sum())),
+                   metric(t("m_win"), "🔒"), metric(t("m_avg_round"), "🔒"))]
+    if not swing.empty:
+        out.append(msg("info", t("swing_teaser", n=len(swing))))
+    out.append({"k": "locked", "blocks": [h(t("lock_title"), 4), md(t("lock_body")), cap(t("pro_status")),
+                                          founder_offer(c, "web_rounds")]})
     return out
 
 

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>TrueCost — your real IBKR profit, in your own currency</title>
+<title>TrueCost — round-trip calculator & real cost for IBKR traders</title>
 <meta name="description" content="Upload your Interactive Brokers statement and see, in your home currency, whether your profit came from trading or the exchange rate, your real cost after trading around a position, and what fees cost you. Free, no sign-up.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%234f46e5'/><text x='50' y='68' font-size='54' font-family='Arial' font-weight='700' fill='white' text-anchor='middle'>T</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -17,8 +17,8 @@
   <div class="wrap">
     <a class="logo" href="#"><i>T</i>TrueCost</a>
     <div class="links">
-      <a href="#why" data-t="nav_why"></a>
       <a href="#calculator" data-t="nav_calc"></a>
+      <a href="#why" data-t="nav_why"></a>
       <a href="#who" data-t="nav_who"></a>
       <a href="#pricing" data-t="nav_pricing"></a>
       <a href="#faq" data-t="nav_faq"></a>
@@ -40,69 +40,13 @@
     </ul>
     <div class="badge reveal" data-t="hero_badge"></div>
     <div class="cta reveal">
-      <a class="btn btn-primary app-link" href="app/" data-t="hero_cta"></a>
-      <a class="btn btn-ghost" href="#calculator" data-t="hero_cta2"></a>
+      <a class="btn btn-primary" href="calculator.html#plan" data-where="hero_calc" data-t="hero_cta"></a>
+      <a class="btn btn-ghost app-link" href="app/" data-t="hero_cta2"></a>
     </div>
     <div class="trust reveal" data-t="hero_trust"></div>
 
-    <div class="mock reveal" aria-label="TrueCost screenshot">
-      <div class="mock-bar"><span></span><span></span><span></span><b>chuanyesama.github.io/truecost/app</b></div>
-      <div class="mock-body">
-        <div class="mock-tabs"><span class="on" data-t="m_home"></span><span data-t="m_t1"></span><span data-t="m_t2"></span>
-          <span data-t="m_t3"></span><span data-t="m_t4"></span><span data-t="m_t5"></span><span data-t="m_t6"></span></div>
-        <div class="mock-title" data-t="m_title"></div>
-        <div class="mock-note" data-t="m_note"></div>
-        <div class="grid3">
-          <div class="mcard float">
-            <h4 data-t="m_c1"></h4>
-            <div class="mlabel" data-t="m_trading"></div>
-            <div class="mvalue pos"><span class="count" data-to="9033" data-prefix="+A$"></span></div>
-            <div class="mlabel" data-t="m_fx"></div>
-            <div class="mvalue pos"><span class="count" data-to="1220" data-prefix="+A$"></span></div>
-            <div class="mtext" data-t="m_c1_line"></div>
-          </div>
-          <div class="mcard float" style="animation-delay:-2s">
-            <h4 data-t="m_c2"></h4>
-            <div class="mlabel">NVDA</div>
-            <div class="mvalue" data-t="m_zero"></div>
-            <div class="mtext" data-t="m_c2_line"></div>
-          </div>
-          <div class="mcard float" style="animation-delay:-4s">
-            <h4 data-t="m_c3"></h4>
-            <div class="mlabel" data-t="m_fees"></div>
-            <div class="mvalue neg"><span class="count" data-to="280" data-prefix="−A$"></span></div>
-            <div class="mtext" data-t="m_c3_line"></div>
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
 </header>
-
-<section id="why">
-  <div class="wrap center">
-    <div class="eyebrow reveal" data-t="why_eyebrow"></div>
-    <h2 class="reveal" data-t="why_title"></h2>
-    <p class="lead reveal" data-t="why_sub"></p>
-  </div>
-  <div class="wrap">
-    <div class="cards">
-      <div class="card reveal"><div class="ico">💱</div><h3 data-t="p1_t"></h3><p data-t="p1_d"></p></div>
-      <div class="card reveal"><div class="ico">🎯</div><h3 data-t="p2_t"></h3><p data-t="p2_d"></p></div>
-      <div class="card reveal"><div class="ico">💸</div><h3 data-t="p3_t"></h3><p data-t="p3_d"></p></div>
-    </div>
-    <div class="feat reveal">
-      <div><b data-t="f1_t"></b><span data-t="f1_d"></span></div>
-      <div><b data-t="f2_t"></b><span data-t="f2_d"></span></div>
-      <div><b data-t="f3_t"></b><span data-t="f3_d"></span></div>
-      <div><b data-t="f4_t"></b><span data-t="f4_d"></span></div>
-      <div><b data-t="f5_t"></b><span data-t="f5_d"></span></div>
-      <div><b data-t="f6_t"></b><span data-t="f6_d"></span></div>
-      <div><b data-t="f7_t"></b><span data-t="f7_d"></span></div>
-      <div><b data-t="f8_t"></b><span data-t="f8_d"></span></div>
-    </div>
-  </div>
-</section>
 
 <section id="calculator" style="background: var(--card); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);">
   <div class="wrap center">
@@ -165,6 +109,64 @@
   </div>
 </section>
 
+<section id="why">
+  <div class="wrap center">
+    <div class="eyebrow reveal" data-t="why_eyebrow"></div>
+    <h2 class="reveal" data-t="why_title"></h2>
+    <p class="lead reveal" data-t="why_sub"></p>
+  </div>
+  <div class="wrap">
+  <div class="mock reveal" aria-label="TrueCost screenshot">
+    <div class="mock-bar"><span></span><span></span><span></span><b>chuanyesama.github.io/truecost/app</b></div>
+    <div class="mock-body">
+      <div class="mock-tabs"><span class="on" data-t="m_home"></span><span data-t="m_t1"></span><span data-t="m_t2"></span>
+        <span data-t="m_t3"></span><span data-t="m_t4"></span><span data-t="m_t5"></span><span data-t="m_t6"></span></div>
+      <div class="mock-title" data-t="m_title"></div>
+      <div class="mock-note" data-t="m_note"></div>
+      <div class="grid3">
+        <div class="mcard float">
+          <h4 data-t="m_c1"></h4>
+          <div class="mlabel" data-t="m_trading"></div>
+          <div class="mvalue pos"><span class="count" data-to="9033" data-prefix="+A$"></span></div>
+          <div class="mlabel" data-t="m_fx"></div>
+          <div class="mvalue pos"><span class="count" data-to="1220" data-prefix="+A$"></span></div>
+          <div class="mtext" data-t="m_c1_line"></div>
+        </div>
+        <div class="mcard float" style="animation-delay:-2s">
+          <h4 data-t="m_c2"></h4>
+          <div class="mlabel">NVDA</div>
+          <div class="mvalue" data-t="m_zero"></div>
+          <div class="mtext" data-t="m_c2_line"></div>
+        </div>
+        <div class="mcard float" style="animation-delay:-4s">
+          <h4 data-t="m_c3"></h4>
+          <div class="mlabel" data-t="m_fees"></div>
+          <div class="mvalue neg"><span class="count" data-to="280" data-prefix="−A$"></span></div>
+          <div class="mtext" data-t="m_c3_line"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div>
+  <div class="wrap">
+    <div class="cards">
+      <div class="card reveal"><div class="ico">💱</div><h3 data-t="p1_t"></h3><p data-t="p1_d"></p></div>
+      <div class="card reveal"><div class="ico">🎯</div><h3 data-t="p2_t"></h3><p data-t="p2_d"></p></div>
+      <div class="card reveal"><div class="ico">💸</div><h3 data-t="p3_t"></h3><p data-t="p3_d"></p></div>
+    </div>
+    <div class="feat reveal">
+      <div><b data-t="f1_t"></b><span data-t="f1_d"></span></div>
+      <div><b data-t="f2_t"></b><span data-t="f2_d"></span></div>
+      <div><b data-t="f3_t"></b><span data-t="f3_d"></span></div>
+      <div><b data-t="f4_t"></b><span data-t="f4_d"></span></div>
+      <div><b data-t="f5_t"></b><span data-t="f5_d"></span></div>
+      <div><b data-t="f6_t"></b><span data-t="f6_d"></span></div>
+      <div><b data-t="f7_t"></b><span data-t="f7_d"></span></div>
+      <div><b data-t="f8_t"></b><span data-t="f8_d"></span></div>
+    </div>
+  </div>
+</section>
+
 <section id="who">
   <div class="wrap center">
     <div class="eyebrow reveal" data-t="who_eyebrow"></div>
@@ -213,7 +215,7 @@
         <h3 data-t="pro_t"></h3>
         <div class="price">A$49 <small data-t="pro_unit"></small></div>
         <p class="plan-after" data-t="pro_after"></p>
-        <ul><li data-t="pro_1"></li><li data-t="pro_2"></li><li data-t="pro_3"></li><li data-t="pro_4"></li><li data-t="pro_5"></li></ul>
+        <ul><li data-t="pro_0"></li><li data-t="pro_1"></li><li data-t="pro_2"></li><li data-t="pro_3"></li><li data-t="pro_4"></li><li data-t="pro_5"></li></ul>
         <div class="plan-btns">
           <a class="btn btn-primary" href="https://buy.stripe.com/dRmeVe8MLd9w0MT7DmfEk00?client_reference_id=site_pricing_year" data-where="pricing" data-plan="year" data-t="founder_cta"></a>
           <a class="btn btn-ghost" href="https://buy.stripe.com/7sYfZi0gf4D067d9LufEk01?client_reference_id=site_pricing_month" data-where="pricing" data-plan="month" data-t="month_cta"></a>
@@ -276,14 +278,14 @@ const T = {
   en: {
     nav_why: "Why TrueCost", nav_calc: "Calculator", nav_who: "Who it's for", nav_pricing: "Pricing", nav_faq: "FAQ",
     nav_cta: "Try it free",
-    hero_eyebrow: "For Interactive Brokers users · any home currency",
-    hero_title: "Did you profit from <em>trading</em> — or from the exchange rate?",
-    hero_sub: "Upload your IBKR statement and see, in your own currency, where your money really came from, your real cost after trading around a position, and what fees took.",
-    hero_c1: "Reconciles to your account to the cent", hero_c2: "Real cost after round trips", hero_c3: "Every fee laid out",
-    hero_badge: "Free · no sign-up · your statement is never stored",
-    hero_cta: "Try it with a sample account", hero_cta2: "See the round-trip calculator ↓",
+    hero_eyebrow: "Free round-trip calculator · for Interactive Brokers traders",
+    hero_title: "Sold high, bought back low — did your cost <em>really</em> go down?",
+    hero_sub: "IBKR's average cost forgets every round trip. Work out the buy-back price that actually lowers your cost after commission — and what your shares really cost you now. No upload, no sign-up.",
+    hero_c1: "Buy-back price after commission", hero_c2: "Real cost after round trips", hero_c3: "Zero-cost holdings spotted",
+    hero_badge: "Free · no sign-up · runs in your browser",
+    hero_cta: "Open the round-trip calculator", hero_cta2: "Analyse my IBKR statement",
     hero_trust: "TrueCost only reads the statement you upload. It can't trade and never touches your money.",
-    m_home: "🏠 Home", m_t1: "Overview", m_t2: "Real cost", m_t3: "Chart", m_t4: "Round trips", m_t5: "Fees", m_t6: "Style",
+    m_home: "🏠 Home", m_t1: "Overview", m_t2: "Real cost", m_t3: "Chart", m_t4: "Round trips ⭐", m_t5: "Fees", m_t6: "Style",
     m_title: "What TrueCost finds — sample account", m_note: "👀 Fictional sample account, built from real market prices.",
     m_c1: "💱 Where the money came from", m_trading: "📈 Trading", m_fx: "💱 Currency",
     m_c1_line: "Trading is the main source. Currency added A$1,220 your broker never shows separately.",
@@ -292,29 +294,29 @@ const T = {
     m_c3: "💸 What trading cost", m_fees: "Commissions & fees",
     m_c3_line: "158 orders, A$1.72 each on average — by order size, market and month.",
     why_eyebrow: "What your broker doesn't show",
-    why_title: "Three questions IBKR can't answer for you",
+    why_title: "Upload your statement: three questions IBKR can't answer",
     why_sub: "IBKR reports each stock in its own currency and an average cost that forgets every round trip. If your home currency isn't USD, you're only seeing half the picture.",
     p1_t: "Was it trading, or the exchange rate?",
     p1_d: "Every trade converted at that day's rate, then your total split into trading vs currency (including cash you hold in USD) — adding up exactly to your account's real profit.",
     p2_t: "What did my shares really cost?",
-    p2_d: "Sold high and bought back lower? Your real cost dropped — IBKR's average cost doesn't show it. See your diluted cost, every round, and which holdings are now free.",
+    p2_d: "Sold high and bought back lower? Your real cost dropped — IBKR's average cost doesn't show it. See your diluted cost and which holdings are now free — and with Pro, how every single round went.",
     p3_t: "How much are fees eating?",
     p3_d: "Commissions and FX conversion costs, by order size, market and month — plus how often you're paying the minimum, and what merging orders would save.",
     f1_t: "📊 P/L split", f1_d: "Trading, currency, income & fees",
     f2_t: "🎯 Real cost", f2_d: "Diluted cost and zero-cost holdings",
-    f3_t: "🔁 Round trips", f3_d: "Every sell-and-buy-back, win or loss",
+    f3_t: "🔁 Round-trip scorecard ⭐ Pro", f3_d: "Every round, win rate, oversized swings",
     f4_t: "📈 Charts", f4_d: "Candles from 2H to 5Y with your B/S marks",
     f5_t: "💸 Fees", f5_d: "Where commissions go, and how to save",
     f6_t: "🧭 Trading style", f6_d: "Win rate, loss size, habits — no stock tips",
     f7_t: "🌏 Any home currency", f7_d: "AUD, EUR, GBP, SGD… ECB rates; RBA for AUD",
     f8_t: "🀄 English & 中文", f8_d: "Full Chinese and English interface",
-    calc_eyebrow: "Try it — no upload needed",
+    calc_eyebrow: "Free · no upload needed",
     calc_title: "Round-trip calculator",
     calc_sub: "Bought some shares, then sold part of them high and bought back lower? Enter it below and compare the cost IBKR shows with what the shares really cost you.",
     calc_full: "Planning a round trip? Work out your buy-back price first →", calc_full_btn: "Full calculator",
     who_eyebrow: "Who it's for", who_title: "Pick the one that sounds like you",
     w1_t: "You trade around a core position", w1_d: "You sell into strength and buy back on dips, often several times a month.",
-    w1_a: "Know whether each round actually lowered your cost", w1_b: "See if fees quietly ate the gains",
+    w1_a: "Know your buy-back price before you sell", w1_b: "See if fees quietly ate the gains",
     w2_t: "You invest from outside the US", w2_d: "Your home currency is AUD, EUR, GBP, SGD… but you hold US stocks and USD cash.",
     w2_a: "See how much the exchange rate added or took", w2_b: "P/L in your own currency, every trade at that day's rate",
     w3_t: "You're an accountant", w3_d: "Clients bring you multi-currency IBKR accounts at tax time.",
@@ -323,15 +325,15 @@ const T = {
     n1_t: "Not a broker", n1_d: "You keep trading at IBKR. TrueCost can't place orders or move money.",
     n2_t: "Doesn't keep your statement", n2_d: "The free version reads your file for your visit only. No account, nothing stored.",
     n3_t: "Not financial or tax advice", n3_d: "We show your own numbers. No stock tips; check tax figures with a registered tax agent.",
-    price_eyebrow: "Pricing", price_title: "Everything that's live is free",
-    price_sub: "Pro and the annual report are still being built. Founding members can lock in Pro's first year at A$49 today.",
+    price_eyebrow: "Pricing", price_title: "Start free",
+    price_sub: "The calculator and the statement analysis are free. Pro adds the full round-trip scorecard and auto-sync — founding members lock in the first year at A$49 today.",
     s_live: "Live now", s_soon: "🚧 In development", s_presale: "🚧 In development · presale",
-    free_t: "Free", free_1: "Upload your IBKR CSV, any home currency", free_2: "Trading vs currency split",
-    free_3: "Real cost, round trips, fees, trading style", free_4: "Daily & weekly charts with your trades", free_5: "No sign-up, nothing stored",
+    free_t: "Free", free_1: "Round-trip calculator, no upload needed", free_2: "Upload your IBKR CSV: trading vs currency split",
+    free_3: "Real cost, fees, trading style", free_4: "Daily & weekly charts with your trades", free_5: "No sign-up, nothing stored",
     free_cta: "Start free",
     pro_t: "Pro", pro_unit: "first year · founding member",
     pro_after: "Not sure yet? One month for A$12, no renewal. After launch: A$79/year or A$9/month. Launching by 31 Mar 2027 — or a full refund.",
-    pro_1: "Auto-sync from IBKR — no more CSVs", pro_2: "Today's trades, one-click refresh", pro_3: "Multi-year history, merged",
+    pro_0: "⭐ Full round-trip scorecard: every round, win rate, swings", pro_1: "Auto-sync from IBKR — no more CSVs", pro_2: "Today's trades, one-click refresh", pro_3: "Multi-year history, merged",
     pro_4: "Intraday charts (2H–1M)", pro_5: "AI: ask your account, monthly review",
     rep_t: "Annual report", rep_unit: "one-off (planned)",
     rep_1: "Your year in one PDF, in your home currency", rep_2: "Every closed trade at that day's rate", rep_3: "Ready to hand to your accountant",
@@ -360,14 +362,14 @@ const T = {
   zh: {
     nav_why: "为什么用", nav_calc: "做 T 计算器", nav_who: "适合谁", nav_pricing: "价格", nav_faq: "常见问题",
     nav_cta: "免费试用",
-    hero_eyebrow: "为盈透证券（IBKR）用户打造 · 支持任何本币",
-    hero_title: "你在 IBKR 赚的钱，是<em>交易赚的</em>，还是汇率给的？",
-    hero_sub: "上传 IBKR 对账单，用你的本币看清：钱到底从哪来、做 T 之后的真实成本、佣金吃掉了多少。",
-    hero_c1: "和账户实际盈亏对到每一分", hero_c2: "做 T 后的真实成本", hero_c3: "每一笔费用摊开看",
-    hero_badge: "免费 · 不用注册 · 不保存你的对账单",
-    hero_cta: "用示例账户试试", hero_cta2: "试试做 T 计算器 ↓",
+    hero_eyebrow: "免费做 T 计算器 · 为盈透证券（IBKR）用户打造",
+    hero_title: "高抛低吸之后，你的成本<em>真的</em>降了吗？",
+    hero_sub: "IBKR 的平均成本不算做 T。先算好扣掉佣金后买回价要低于多少才真的降成本，再看看你的股票现在真实是多少钱买的。不用上传，不用注册。",
+    hero_c1: "扣佣金后的保本买回价", hero_c2: "做 T 后的真实成本", hero_c3: "一眼看出零成本持股",
+    hero_badge: "免费 · 不用注册 · 在浏览器里计算",
+    hero_cta: "打开做 T 计算器", hero_cta2: "分析我的 IBKR 对账单",
     hero_trust: "TrueCost 只读取你上传的对账单，不能下单，也从不碰你的钱。",
-    m_home: "🏠 首页", m_t1: "总览", m_t2: "真实成本", m_t3: "K线图", m_t4: "做T记录", m_t5: "费用", m_t6: "交易风格",
+    m_home: "🏠 首页", m_t1: "总览", m_t2: "真实成本", m_t3: "K线图", m_t4: "做T记录 ⭐", m_t5: "费用", m_t6: "交易风格",
     m_title: "TrueCost 能发现什么——示例账户", m_note: "👀 虚构的示例账户，用真实行情生成。",
     m_c1: "💱 钱从哪来", m_trading: "📈 交易", m_fx: "💱 汇率",
     m_c1_line: "交易是主要来源；汇率另外带来了 A$1,220，券商从不单独显示。",
@@ -376,29 +378,29 @@ const T = {
     m_c3: "💸 交易花了多少钱", m_fees: "佣金与费用",
     m_c3_line: "共 158 笔订单，平均每笔 A$1.72；按订单大小、市场、月份拆开看。",
     why_eyebrow: "券商没告诉你的",
-    why_title: "IBKR 回答不了的三个问题",
+    why_title: "上传对账单：IBKR 回答不了的三个问题",
     why_sub: "IBKR 按每只股票自己的币种显示盈亏，平均成本也不算做 T 的盈亏。如果你的本币不是美元，你只看到了一半。",
     p1_t: "是交易赚的，还是汇率给的？",
     p1_d: "每笔交易按当天汇率换算成本币，再把总盈亏拆成交易和汇率两部分（包括你手里的美元现金）——加起来正好等于账户的实际盈亏。",
     p2_t: "我的股票到底多少钱买的？",
-    p2_d: "高抛低吸之后，你的真实成本已经降了，IBKR 的平均成本却看不出来。这里能看到摊薄成本、每一轮做 T 的结果，以及哪些已经是零成本持股。",
+    p2_d: "高抛低吸之后，你的真实成本已经降了，IBKR 的平均成本却看不出来。这里能看到摊薄成本、哪些已经是零成本持股；专业版还能逐轮看每一次做 T 的结果。",
     p3_t: "佣金吃掉了多少？",
     p3_d: "佣金和换汇成本按订单大小、市场、月份拆开看，还能看到多少笔付的是最低佣金、合并下单能省多少。",
     f1_t: "📊 盈亏拆解", f1_d: "交易、汇率、收入与费用",
     f2_t: "🎯 真实成本", f2_d: "摊薄成本与零成本持股",
-    f3_t: "🔁 做 T 记录", f3_d: "每一轮先卖后买，赚还是亏",
+    f3_t: "🔁 做 T 成绩单 ⭐ 专业版", f3_d: "每一轮明细、胜率、加仓波段",
     f4_t: "📈 K 线图", f4_d: "2 小时到 5 年，标出你的每笔买卖",
     f5_t: "💸 费用透视", f5_d: "佣金花在哪、怎么省",
     f6_t: "🧭 交易风格", f6_d: "胜率、亏损幅度、交易习惯——不荐股",
     f7_t: "🌏 任何本币", f7_d: "澳元、欧元、英镑、新元……ECB 汇率；澳元可选 RBA",
     f8_t: "🀄 中文 & English", f8_d: "完整的中英文界面",
-    calc_eyebrow: "不用上传，直接试",
+    calc_eyebrow: "免费 · 不用上传",
     calc_title: "做 T 成本计算器",
     calc_sub: "先买了一批，后来高位卖出一部分、低位再买回来？填进来，对比 IBKR 显示的成本和你真实的成本。",
     calc_full: "做 T 之前想先算好买回价？打开完整计算器 →", calc_full_btn: "完整计算器",
     who_eyebrow: "适合谁", who_title: "选一个最像你的",
     w1_t: "你经常做 T", w1_d: "在底仓上高抛低吸，一个月可能来回好几次。",
-    w1_a: "知道每一轮是不是真的降低了成本", w1_b: "看看佣金是不是悄悄吃掉了利润",
+    w1_a: "卖出之前就知道买回价该挂多少", w1_b: "看看佣金是不是悄悄吃掉了利润",
     w2_t: "你在美国以外投资", w2_d: "本币是澳元、欧元、英镑、新元……手里却是美股和美元现金。",
     w2_a: "看清汇率帮你赚了还是亏了多少", w2_b: "用本币算盈亏，每笔交易按当天汇率",
     w3_t: "你是会计 / 税务代理", w3_d: "报税季总有客户拿着多币种的 IBKR 账户来找你。",
@@ -407,15 +409,15 @@ const T = {
     n1_t: "不是券商", n1_d: "你继续在 IBKR 交易。TrueCost 不能下单，也不能转账。",
     n2_t: "不保存你的对账单", n2_d: "免费版只在本次访问中读取文件，不用注册，什么都不保存。",
     n3_t: "不提供投资或税务建议", n3_d: "只展示你自己的数字，不荐股；报税数字请让注册税务师核对。",
-    price_eyebrow: "价格", price_title: "已上线的功能全部免费",
-    price_sub: "专业版和年度报告还在开发中。现在成为创始会员，专业版首年只要 A$49。",
+    price_eyebrow: "价格", price_title: "免费开始",
+    price_sub: "做 T 计算器和对账单分析免费。专业版提供完整做 T 成绩单和自动同步；现在成为创始会员，首年只要 A$49。",
     s_live: "已上线", s_soon: "🚧 开发中", s_presale: "🚧 开发中 · 预售",
-    free_t: "免费版", free_1: "上传 IBKR CSV，支持任何本币", free_2: "交易 vs 汇率拆分",
-    free_3: "真实成本、做 T、费用、交易风格", free_4: "日线、周线 K 线 + 你的买卖点", free_5: "不用注册，不保存数据",
+    free_t: "免费版", free_1: "做 T 计算器，不用上传", free_2: "上传 IBKR CSV：交易 vs 汇率拆分",
+    free_3: "真实成本、费用、交易风格", free_4: "日线、周线 K 线 + 你的买卖点", free_5: "不用注册，不保存数据",
     free_cta: "免费开始",
     pro_t: "专业版", pro_unit: "首年 · 创始会员",
     pro_after: "还没想好？也可以先买一个月 A$12，不自动续费。上线后正式价 A$79/年 或 A$9/月。最晚 2027-03-31 上线，否则全额退款。",
-    pro_1: "从 IBKR 自动同步，不用再下载 CSV", pro_2: "当天交易，一键刷新", pro_3: "多年历史自动合并",
+    pro_0: "⭐ 完整做 T 成绩单：每一轮明细、胜率、加仓波段", pro_1: "从 IBKR 自动同步，不用再下载 CSV", pro_2: "当天交易，一键刷新", pro_3: "多年历史自动合并",
     pro_4: "分钟级 K 线（2H–1M）", pro_5: "AI：问你的账户、每月复盘",
     rep_t: "年度报告", rep_unit: "一次性（计划）",
     rep_1: "一整年浓缩成一份本币 PDF", rep_2: "每笔平仓按当天汇率换算", rep_3: "可以直接交给会计师",
@@ -466,7 +468,7 @@ function render() {
   });
   document.querySelectorAll(".app-link").forEach(a => a.href = `${APP}/?lang=${lang}&src=site`);
   document.getElementById("lang").textContent = lang === "zh" ? "English" : "中文";
-  document.title = lang === "zh" ? "TrueCost — 用本币看清你在 IBKR 的真实盈亏" : "TrueCost — your real IBKR profit, in your own currency";
+  document.title = lang === "zh" ? "TrueCost — 做 T 计算器 · IBKR 真实成本" : "TrueCost — round-trip calculator & real cost for IBKR traders";
   calc();
 }
 

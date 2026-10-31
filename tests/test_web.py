@@ -28,9 +28,20 @@ def test_every_tab_renders(lang):
     info = json.loads(web.load(None))
     assert info["ok"] and info["demo"] and info["reconciles"]
     page = json.loads(web.page(lang, {}))
-    assert [k for k, _ in page["tabs"]] == web.TABS
+    assert sorted(k for k, _ in page["tabs"]) == sorted(web.TABS)
     for name in web.TABS:
         assert json.loads(web.tab(name, lang, {})), name
+
+
+def test_round_trip_scorecard_is_pro_on_your_own_statement():
+    web.load(None)
+    sample = web.tab("rounds", "en", {})
+    assert '"k": "locked"' not in sample and "rounds_stock" in sample  # the sample account shows it all
+    web.load(web.DEMO.read_bytes())  # the same file, as a viewer's own upload
+    own = json.loads(web.tab("rounds", "en", {}))
+    assert own[-1]["k"] == "locked" and "rounds_stock" not in json.dumps(own)
+    assert own[-1]["blocks"][-1]["where"] == "web_rounds"
+    assert json.loads(web.tab("calc", "en", {}))  # the calculator stays free
 
 
 def test_overview_matches_the_report():
