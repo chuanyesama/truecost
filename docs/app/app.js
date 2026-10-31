@@ -5,7 +5,7 @@
 (function () {
   // A Cloudflare Worker that forwards Yahoo's chart API with CORS (see worker/). Empty: the price chart
   // shows the sample account's cached daily prices only.
-  const PRICE_PROXY = "";
+  const PRICE_PROXY = "https://truecost-prices.chuanye.workers.dev";
 
   // shown while the engine loads (the same words come from app/i18n.py once it has)
   const BOOT = {

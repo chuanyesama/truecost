@@ -63,13 +63,13 @@ WEB_TEXT = {
                         "- Analytics provider: PostHog (EU servers).",
         "sidebar_footer": "🔒 Your statement never leaves your browser · privacy notes at the bottom of 🏠 Home. "
                           "Not tax, financial or investment advice.",
-        "chart_offline": "📈 Live price charts for your own stocks are coming to the web version soon — every other "
-                         "tab already works.",
+        "chart_offline": "📈 Prices couldn't be loaded right now. Try again in a minute; every other tab works.",
         "chart_offline_demo": "Sample account: daily prices only (3M–1Y).",
         "web_upload": "Upload statement", "web_upload_other": "Upload another statement",
         "web_settings": "Settings", "web_sample": "Back to the sample account",
         "web_loading": "Reading your statement…",
         # the round-trip scorecard is Pro; the calculator stays free
+        "chart_intraday_pro": "⭐ Intraday candles (2H–1M) are part of Pro.",
         "pro_demo_note": "⭐ **Pro feature — shown in full on the sample account.** On your own statement you'll see "
                          "how many round trips you made and their total; the full scorecard is part of Pro.",
         "swing_teaser": "We also found **{n} oversized swings** (adding beyond your core position, then selling "
@@ -125,11 +125,12 @@ WEB_TEXT = {
                         "- 只有你主动提交时才会保存邮箱、反馈和问卷回答，仅用于改进 TrueCost、回复或通知你。\n"
                         "- 统计服务商：PostHog（欧洲服务器）。",
         "sidebar_footer": "🔒 对账单不会离开你的浏览器 · 隐私说明在「🏠 首页」底部。仅供参考，不构成税务、财务或投资建议。",
-        "chart_offline": "📈 网页版正在接入你自己股票的实时行情，K 线图很快上线——其他标签页都已经可以用了。",
+        "chart_offline": "📈 暂时拿不到行情，请过一分钟再试；其他标签页都可以正常使用。",
         "chart_offline_demo": "示例账户：只有日线（3 个月到 1 年）。",
         "web_upload": "上传对账单", "web_upload_other": "换一份对账单",
         "web_settings": "设置", "web_sample": "回到示例账户",
         "web_loading": "正在读取对账单…",
+        "chart_intraday_pro": "⭐ 分钟级 K 线（2H–1M）属于专业版。",
         "pro_demo_note": "⭐ **专业版功能，示例账户完整展示。** 上传你自己的对账单后，可以看到做 T 的轮数和合计；"
                          "完整成绩单属于专业版。",
         "swing_teaser": "另外识别到 **{n} 次加仓波段**（加仓超过原底仓再卖回）。专业版会逐笔列出，和做 T 放在一起对比。",
@@ -693,11 +694,16 @@ def _chart_pick(c: Ctx):
     pick = c.get("chart_stock", order[0] if order else None)
     pick = pick if pick in order else (order[0] if order else None)
     rk = c.get("chart_range", "6M")
-    rk = rk if rk in prices.RANGES else "6M"
+    rk = rk if rk in chart_ranges(c) else "6M"
     ins = c.r.instruments.set_index("symbol") if not c.r.instruments.empty else None
     ticker = (prices.yahoo_symbol(ins["quote"][pick], ins["exchange"][pick], ins["underlying"][pick])
               if ins is not None and pick in ins.index else None)
     return pick, rk, ticker
+
+
+def chart_ranges(c: Ctx) -> list[str]:
+    """Intraday candles are Pro: the sample account shows every range, a viewer's own statement daily and up."""
+    return [k for k in prices.RANGES if c.demo or k not in prices.INTRADAY]
 
 
 def _sample_bars(pick: str, rk: str) -> tuple[pd.DataFrame, str] | None:
@@ -729,13 +735,15 @@ def chart_tab(c: Ctx, bars_json: str | None) -> list:
     ccy_of = st.groupby("symbol")["currency"].first()
     pick, rk, ticker = _chart_pick(c)
     offline = bars_json is None
-    ranges = OFFLINE_RANGES if offline and c.demo else list(prices.RANGES)
+    ranges = OFFLINE_RANGES if offline and c.demo else chart_ranges(c)
     if rk not in ranges:
         rk = "6M"
     out = [h(t("chart_title")),
            cols([select("chart_stock", t("chart_stock"), list(last_trade.index), pick,
                         [f"{s} · {ccy_of[s]}" for s in last_trade.index])],
                 [seg("chart_range", t("chart_range"), ranges, rk)], widths=[2, 5])]
+    if not c.demo:
+        out.append(cap(t("chart_intraday_pro")))
     ins = r.instruments.set_index("symbol") if not r.instruments.empty else None
     exch = ins["exchange"].get(pick) if ins is not None and pick in ins.index else None
     if ticker is None:

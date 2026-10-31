@@ -2,7 +2,7 @@
 // The statement is analysed here, inside the viewer's browser; it is never sent anywhere.
 // Messages in:  {id, fn, args} -> web.call(fn, args).  Messages out: {id, result} / {id, error} / {progress}.
 const PYODIDE = "https://cdn.jsdelivr.net/pyodide/v0.27.2/full/";
-const ENGINE_VERSION = "3a04efe62a";  // set by scripts/build_web.py
+const ENGINE_VERSION = "74bab5dfbd";  // set by scripts/build_web.py
 
 importScripts(PYODIDE + "pyodide.js");
 
