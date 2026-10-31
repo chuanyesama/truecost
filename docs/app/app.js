@@ -284,12 +284,15 @@
       document.querySelector('#drop b').textContent = tx.hero_upload;
       document.querySelector('#hero .drop-note').textContent = tx.hero_private;
       $("scroll-note").innerHTML = md(tx.hero_or);
+      $("howto").querySelector("summary").textContent = tx.web_howto;
+      $("howto").querySelector(".md").innerHTML = md(`${tx.guide_s1_body}\n\n**${tx.guide_s1_mistakes}**\n\n${tx.guide_s1_mistakes_body}`);
       $("foot-note").textContent = tx.disclaimer;
     }
     $("pills").innerHTML = (tx ? tx.hero_pills : b("pills")).map((p) => `<li>${esc(p)}</li>`).join("");
     const demo = !pg || pg.demo;
     $("hero").hidden = !demo;
     $("scroll-note").hidden = !pg;
+    $("howto").hidden = !pg;
     $("head").hidden = demo;
     if (pg && !demo) {
       morph($("head"), `<div class="head-row"><h1>TrueCost</h1><div class="head-links">

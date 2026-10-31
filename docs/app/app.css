@@ -42,6 +42,10 @@ body { min-height: 100vh; }
 .drop span { color: var(--muted); font-size: .9rem; }
 .drop .btn { margin-top: 14px; pointer-events: none; color: #fff; font-size: 1rem; }
 .drop-note { color: var(--muted); font-size: .9rem; margin-top: 12px; }
+.howto { max-width: 640px; margin: 14px auto 0; padding: 12px 18px; text-align: left; }
+.howto summary { cursor: pointer; font-weight: 600; color: var(--accent); text-align: center; }
+.howto[open] summary { margin-bottom: 10px; }
+.howto .md ol { padding-left: 1.3rem; }
 .scroll-note { margin-top: 18px; color: var(--muted); font-size: .95rem; }
 .scroll-note p { margin: 0; }
 

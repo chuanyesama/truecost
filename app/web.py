@@ -68,6 +68,7 @@ WEB_TEXT = {
         "web_upload": "Upload statement", "web_upload_other": "Upload another statement",
         "web_settings": "Settings", "web_sample": "Back to the sample account",
         "web_loading": "Reading your statement…",
+        "web_howto": "📥 How do I download this file from IBKR? (2 minutes)",
         # the round-trip scorecard is Pro; the calculator stays free
         "chart_intraday_pro": "⭐ Intraday candles (2H–1M) are part of Pro.",
         "pro_demo_note": "⭐ **Pro feature — shown in full on the sample account.** On your own statement you'll see "
@@ -130,6 +131,7 @@ WEB_TEXT = {
         "web_upload": "上传对账单", "web_upload_other": "换一份对账单",
         "web_settings": "设置", "web_sample": "回到示例账户",
         "web_loading": "正在读取对账单…",
+        "web_howto": "📥 怎么从 IBKR 下载这个文件？（2 分钟）",
         "chart_intraday_pro": "⭐ 分钟级 K 线（2H–1M）属于专业版。",
         "pro_demo_note": "⭐ **专业版功能，示例账户完整展示。** 上传你自己的对账单后，可以看到做 T 的轮数和合计；"
                          "完整成绩单属于专业版。",
@@ -420,7 +422,8 @@ def page(lang: str, p: dict | None = None) -> str:
     names = dict(zip(TABS, [t("tab_home")] + t("tabs")))
     keys = ["hero_title", "hero_sub", "hero_upload", "hero_private", "hero_or", "upload_label", "advanced",
             "lot_method", "lot_method_help", "fx_source", "parse_error", "disclaimer", "sidebar_footer",
-            "pro_title", "pro_pitch", "web_upload", "web_upload_other", "web_settings", "web_sample", "web_loading"]
+            "pro_title", "pro_pitch", "guide_s1_body", "guide_s1_mistakes",
+            "guide_s1_mistakes_body", "web_howto", "web_upload", "web_upload_other", "web_settings", "web_sample", "web_loading"]
     return dumps({
         "demo": c.demo,
         "text": {k: t(k) for k in keys} | {"hero_pills": t("hero_pills")},
