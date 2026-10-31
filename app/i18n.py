@@ -139,7 +139,7 @@ EN = {
     "faq_safe_a": "The free version never stores your file: it's parsed in memory for your visit and the temporary "
                   "copy is deleted immediately. Anonymous usage counts (e.g. \"a statement was uploaded\") never "
                   "include amounts, symbols or account numbers. You can also run TrueCost on your own computer — the "
-                  "code is open source on GitHub.",
+                  "code is public on GitHub.",
     "faq_diff_q": "Why don't my numbers match the IBKR app exactly?",
     "faq_diff_a": "IBKR shows profit in each stock's own currency and an average cost that ignores profits from "
                   "selling and buying back. TrueCost converts every trade at that day's exchange rate into your home "
@@ -589,7 +589,7 @@ ZH = {
     "faq_safe_q": "上传对账单安全吗？",
     "faq_safe_a": "免费版从不保存你的文件：只在本次访问的内存里解析，临时文件立即删除。匿名统计"
                   "（比如「有人上传了对账单」）从不包含金额、股票代码或账户号码。你也可以在自己电脑上运行 TrueCost——"
-                  "代码在 GitHub 上开源。",
+                  "代码公开在 GitHub 上，任何人都可以检查。",
     "faq_diff_q": "为什么和 IBKR App 里的数字不完全一样？",
     "faq_diff_a": "IBKR 按每只股票自己的币种显示盈亏，显示的平均成本也不含做 T 的盈亏。TrueCost 把每笔交易按当天汇率"
                   "换算成你的本币，并给出摊薄成本。账户总额是一样的——顶部绿色 ✅ 会用「期末净值 − 净入金」核对。",

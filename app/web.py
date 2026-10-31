@@ -49,8 +49,8 @@ WEB_TEXT = {
                          "is stored, and no amounts, symbols or account numbers are ever sent anywhere.",
         "faq_safe_a": "Yes. TrueCost reads your statement inside your browser — the file is never uploaded to any "
                       "server and is gone when you close the tab. Anonymous usage counts (e.g. \"a statement was "
-                      "uploaded\") never include amounts, symbols or account numbers. The code is open source on "
-                      "GitHub.",
+                      "uploaded\") never include amounts, symbols or account numbers. The code is public on "
+                      "GitHub, so anyone can check this.",
         "privacy_body": "- Your statement is read inside your browser and never uploaded; closing the tab clears "
                         "it.\n"
                         "- We count anonymous usage events to improve TrueCost: page opened, language, whether a "
@@ -117,7 +117,7 @@ WEB_TEXT = {
                          "🔒 对账单只在你的浏览器里读取：不会上传到任何服务器，不保存任何内容，"
                          "也从不发送金额、股票代码或账户号码。",
         "faq_safe_a": "安全。TrueCost 在你的浏览器里读取对账单——文件不会上传到任何服务器，关掉页面就没了。匿名统计"
-                      "（比如「有人上传了对账单」）从不包含金额、股票代码或账户号码。代码在 GitHub 上开源。",
+                      "（比如「有人上传了对账单」）从不包含金额、股票代码或账户号码。代码公开在 GitHub 上，任何人都可以检查。",
         "privacy_body": "- 你的对账单只在浏览器里读取，不会上传；关掉页面就清除了。\n"
                         "- 为了改进 TrueCost，我们统计匿名使用情况：打开页面、语言、是否上传了对账单、本币、"
                         "市场数量、交易笔数的大致区间、点击了哪些按钮。**不记录任何金额、股票代码、账户号码或对账单内容。**\n"
